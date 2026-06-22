@@ -145,7 +145,7 @@ const SEC = [
   {id:1,num:'①',title:'基本情報',color:'#1B4332',light:'#D1FAE5',subs:[
     {id:'1-1',title:'案件情報',fields:[
       {no:'*',key:'andpadId',lbl:'ANDPADシステムID',req:false,type:'t',hint:'IDまたはANDPAD URL（https://key.andpad.jp/...）'},
-      {no:1,key:'facilityName',lbl:'施設名',req:true,type:'t',hint:'施主の正式名称＋事業所名'},
+      {no:1,key:'facilityName',lbl:'ANDPAD案件名',req:true,type:'t',hint:'ANDPADに登録した案件名（例: ○○工場太陽光発電設備工事）'},
       {no:2,key:'address',lbl:'所在地（住所）',req:true,type:'t',hint:'郵便番号・地番まで含めた完全な住所'},
       {no:3,key:'latLng',lbl:'緯度・経度',req:false,type:'t',hint:'Google Mapsから取得 / 度表記'},
       {no:4,key:'buildingUse',lbl:'建物用途',req:true,type:'s',opts:['工場','倉庫','事務所','店舗','物流','学校・公共','その他']},
@@ -408,7 +408,7 @@ function updateProgress(){
 }
 function updateHeader(){
   const f=document.getElementById('header-facility');
-  if(f) f.textContent=getVal('facilityName')||'施設名未入力';
+  if(f) f.textContent=getVal('facilityName')||'案件名未入力';
 }
 
 // ============================================================
@@ -506,8 +506,8 @@ function dashboardHtml(){
       <div style="font-size:11px;color:var(--muted);line-height:1.8">
         <div style="margin-bottom:8px">① <strong>JSONエクスポート</strong> → ファイルダウンロード</div>
         <div style="margin-bottom:8px">② GitHubリポジトリの <code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">projects/</code> フォルダへ配置</div>
-        <div style="margin-bottom:8px">ファイル名：<code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">${(extractAndpadId(getVal('andpadId'))||'ANDPAD_ID')}-${(getVal('facilityName')||'施設名').replace(/\s/g,'-')}.json</code></div>
-        <div style="margin-bottom:8px">③ commitメッセージ例：<br><code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">feat: ${getVal('facilityName')||'施設名'} 情報収集シート更新</code></div>
+        <div style="margin-bottom:8px">ファイル名：<code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">${(extractAndpadId(getVal('andpadId'))||'ANDPAD_ID')}-${(getVal('facilityName')||'案件名').replace(/\s/g,'-')}.json</code></div>
+        <div style="margin-bottom:8px">③ commitメッセージ例：<br><code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">feat: ${getVal('facilityName')||'案件名'} 情報収集シート更新</code></div>
         <div style="color:#666">チームメンバーは同ファイルをインポートして閲覧・編集できます。</div>
       </div>
     </div>
@@ -584,7 +584,7 @@ function renderApp(){
   document.getElementById('app').innerHTML=`
     <div class="hdr">
       <span class="hdr-logo">☀ 太陽光PJ 情報収集ツール</span>
-      <span class="hdr-facility" id="header-facility">${esc(getVal('facilityName')||'施設名未入力')}</span>
+      <span class="hdr-facility" id="header-facility">${esc(getVal('facilityName')||'案件名未入力')}</span>
       <span class="hdr-save" id="save-ts">未保存</span>
       <div class="hdr-btns print-hide">
         <button class="btn btn-wh" onclick="showImport()">📂 読込</button>
@@ -643,7 +643,7 @@ function switchTab(id){
 // EXPORT / IMPORT
 // ============================================================
 function doExport(){
-  const facility=(getVal('facilityName')||'施設名').replace(/[\s\/\\:*?"<>|]/g,'-');
+  const facility=(getVal('facilityName')||'案件名').replace(/[\s\/\\:*?"<>|]/g,'-');
   const andpad=(extractAndpadId(getVal('andpadId'))||'ANDPAD_ID');
   const payload={
     _meta:{...metaState,exportedAt:new Date().toISOString(),tool:'pv-info-sheet-v1'},
