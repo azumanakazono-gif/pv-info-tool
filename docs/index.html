@@ -144,7 +144,7 @@ select{-webkit-appearance:auto}
 const SEC = [
   {id:1,num:'①',title:'基本情報',color:'#1B4332',light:'#D1FAE5',subs:[
     {id:'1-1',title:'案件情報',fields:[
-      {no:'*',key:'andpadId',lbl:'ANDPADシステムID',req:false,type:'t',hint:'ANDPADシステムID'},
+      {no:'*',key:'andpadId',lbl:'ANDPADシステムID',req:false,type:'t',hint:'IDまたはANDPAD URL（https://key.andpad.jp/...）'},
       {no:1,key:'facilityName',lbl:'施設名',req:true,type:'t',hint:'施主の正式名称＋事業所名'},
       {no:2,key:'address',lbl:'所在地（住所）',req:true,type:'t',hint:'郵便番号・地番まで含めた完全な住所'},
       {no:3,key:'latLng',lbl:'緯度・経度',req:false,type:'t',hint:'Google Mapsから取得 / 度表記'},
@@ -506,7 +506,7 @@ function dashboardHtml(){
       <div style="font-size:11px;color:var(--muted);line-height:1.8">
         <div style="margin-bottom:8px">① <strong>JSONエクスポート</strong> → ファイルダウンロード</div>
         <div style="margin-bottom:8px">② GitHubリポジトリの <code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">projects/</code> フォルダへ配置</div>
-        <div style="margin-bottom:8px">ファイル名：<code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">${(getVal('andpadId')||'ANDPAD_ID')}-${(getVal('facilityName')||'施設名').replace(/\s/g,'-')}.json</code></div>
+        <div style="margin-bottom:8px">ファイル名：<code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">${(extractAndpadId(getVal('andpadId'))||'ANDPAD_ID')}-${(getVal('facilityName')||'施設名').replace(/\s/g,'-')}.json</code></div>
         <div style="margin-bottom:8px">③ commitメッセージ例：<br><code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">feat: ${getVal('facilityName')||'施設名'} 情報収集シート更新</code></div>
         <div style="color:#666">チームメンバーは同ファイルをインポートして閲覧・編集できます。</div>
       </div>
@@ -644,7 +644,7 @@ function switchTab(id){
 // ============================================================
 function doExport(){
   const facility=(getVal('facilityName')||'施設名').replace(/[\s\/\\:*?"<>|]/g,'-');
-  const andpad=(getVal('andpadId')||'ANDPAD_ID');
+  const andpad=(extractAndpadId(getVal('andpadId'))||'ANDPAD_ID');
   const payload={
     _meta:{...metaState,exportedAt:new Date().toISOString(),tool:'pv-info-sheet-v1'},
     data:{...state}
@@ -719,6 +719,12 @@ function doClear(){
 function esc(s){
   if(!s&&s!==0) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function extractAndpadId(val){
+  if(!val) return '';
+  const m=val.match(/andpad\.jp\/[^/]*\/(\d+)/)||val.match(/andpad\.jp\/.*[?&]id=(\d+)/);
+  if(m) return m[1];
+  return val.replace(/\s/g,'');
 }
 
 // ============================================================
