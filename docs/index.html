@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>太陽光PJ 情報収集ツール | アズマ</title>
+<style>
+:root {
+  --c1: #1B4332; --c1l: #52B788; --c1p: #D1FAE5;
+  --c2: #1e40af; --c2p: #DBEAFE;
+  --c3: #1d4ed8; --c3p: #EFF6FF;
+  --c4: #92400e; --c4p: #FEF3C7;
+  --c5: #4c1d95; --c5p: #EDE9FE;
+  --c6: #991b1b; --c6p: #FEE2E2;
+  --req: #dc2626; --amber: #b45309;
+  --surf: #F4FAF7; --bg: #fff;
+  --border: #d1e8dc; --text: #1c2b23; --muted: #5f7a6d;
+  --r: 6px; --shad: 0 1px 6px rgba(27,67,50,0.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Hiragino Sans","Yu Gothic UI",system-ui,sans-serif;font-size:13px;line-height:1.5;color:var(--text);background:var(--surf)}
+
+/* ── HEADER ── */
+.hdr{background:var(--c1);color:#fff;padding:10px 16px;position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.hdr-logo{font-size:11px;font-weight:700;letter-spacing:.08em;opacity:.8;white-space:nowrap}
+.hdr-facility{flex:1;font-size:15px;font-weight:700;color:var(--c1l);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr-save{font-size:10px;opacity:.6;white-space:nowrap}
+.hdr-btns{display:flex;gap:6px;flex-shrink:0}
+.btn{padding:5px 12px;border:none;border-radius:4px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:.15s}
+.btn-wh{background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.35)}.btn-wh:hover{background:rgba(255,255,255,.28)}
+.btn-green{background:var(--c1l);color:#fff}.btn-green:hover{background:#3a9a6a}
+.btn-red{background:#dc2626;color:#fff}.btn-red:hover{background:#b91c1c}
+.btn-solid{background:var(--c1);color:#fff}.btn-solid:hover{background:#2d5f47}
+.btn-outline{background:#fff;color:var(--c1);border:1px solid var(--c1)}.btn-outline:hover{background:var(--c1p)}
+
+/* ── TABS ── */
+.tabs{background:#fff;border-bottom:2px solid var(--border);position:sticky;top:48px;z-index:190;display:flex;overflow-x:auto;padding:0 12px;gap:2px}
+.tab{padding:9px 14px 7px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;transition:.15s}
+.tab:hover{color:var(--c1)}
+.tab.on{color:var(--c1)}
+.tab.on::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;background:var(--c1)}
+.tab-fill{width:40px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.tab-fill-bar{height:100%;border-radius:2px;width:0%;transition:width .4s}
+
+/* ── MAIN ── */
+.main{max-width:1080px;margin:0 auto;padding:16px}
+.panel{display:none}.panel.on{display:block}
+
+/* ── SUBSECTION ── */
+.sub-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden;box-shadow:var(--shad)}
+.sub-hd{padding:8px 14px;color:#fff;font-weight:700;font-size:11px;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:center}
+.sub-hd-pct{font-size:10px;opacity:.8;font-weight:400}
+
+/* ── FIELD ROWS ── */
+.frow{display:grid;grid-template-columns:26px minmax(160px,1.4fr) 20px minmax(180px,2fr) 64px;border-bottom:1px solid var(--border);min-height:38px;align-items:stretch}
+.frow:last-child{border-bottom:none}
+.frow:hover{background:#fafffe}
+.fno{display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--muted);padding:0 2px;border-right:1px solid var(--border)}
+.flbl{display:flex;align-items:center;padding:6px 10px 6px 8px;font-size:12px;font-weight:600;border-right:1px solid var(--border);line-height:1.4}
+.flbl-txt{flex:1}
+.freq{display:flex;align-items:center;justify-content:center;color:var(--req);font-size:11px;font-weight:700;border-right:1px solid var(--border);padding:0 3px}
+.finp{display:flex;align-items:center;padding:4px 6px}
+.funit{display:flex;align-items:center;padding:4px 6px;font-size:11px;color:var(--muted);border-left:1px solid var(--border);white-space:nowrap;min-width:60px}
+
+/* ── INPUTS ── */
+input[type=text],input[type=number],select,textarea{width:100%;padding:5px 7px;border:1px solid #c8ddd4;border-radius:4px;font-family:inherit;font-size:12px;color:var(--text);background:#fff;transition:.15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--c1l);box-shadow:0 0 0 2px rgba(82,183,136,.2)}
+input.ok,select.ok,textarea.ok{background:#f0fff8;border-color:#86efac}
+.req-empty{border-color:var(--req)!important;background:#fff5f5!important}
+textarea{resize:vertical;min-height:52px}
+select{-webkit-appearance:auto}
+
+/* ── DASHBOARD ── */
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:16px}
+.dash-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:14px;box-shadow:var(--shad)}
+.dash-card h3{font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+.dash-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.dash-row:last-child{border-bottom:none}
+.dash-row:hover .dash-rname{color:var(--c1)}
+.dash-badge{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.dash-rname{flex:1;font-size:12px;font-weight:600}
+.dash-pct{font-size:11px;font-weight:700;width:32px;text-align:right}
+.dash-bar{width:72px;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.dash-barfill{height:100%;border-radius:3px}
+
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.meta-item label{font-size:10px;font-weight:700;color:var(--muted);display:block;margin-bottom:3px}
+.meta-item input,.meta-item select{font-size:12px}
+
+.total-gauge{text-align:center;padding:16px 0}
+.gauge-num{font-size:40px;font-weight:900;color:var(--c1);line-height:1}
+.gauge-lbl{font-size:11px;color:var(--muted);margin-top:4px}
+.gauge-bar{width:100%;height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:12px}
+.gauge-barfill{height:100%;background:var(--c1l);border-radius:4px;transition:width .5s}
+
+/* ── CHECKLIST ── */
+.chk-section{margin-bottom:16px}
+.chk-section h3{font-size:12px;font-weight:700;color:var(--c1);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--c1p)}
+.chk-item{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+.chk-item:last-child{border-bottom:none}
+.chk-icon{width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;margin-top:1px}
+.chk-ok{background:#dcfce7;color:#16a34a}
+.chk-ng{background:#fee2e2;color:#dc2626}
+.chk-body{flex:1;font-size:11px}
+.chk-title{font-weight:700;margin-bottom:2px}
+.chk-fields{color:var(--req);font-size:10px;line-height:1.6}
+
+/* ── ALERTS ── */
+.notice{background:#fffbeb;border:1px solid #fde68a;border-radius:5px;padding:9px 12px;font-size:11px;color:#78350f;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start}
+.notice-icon{flex-shrink:0;font-size:13px}
+
+/* ── PRINT ── */
+@media print{
+  .hdr .hdr-btns,.tabs,.print-hide{display:none!important}
+  .panel{display:block!important}
+  .sub-card{break-inside:avoid;box-shadow:none;border:1px solid #ccc}
+  body{font-size:11px}
+}
+
+/* ── MODAL ── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center}
+.modal{background:#fff;border-radius:8px;padding:20px;max-width:480px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.modal h3{font-size:14px;font-weight:700;margin-bottom:12px;color:var(--c1)}
+.modal p{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end}
+.modal textarea{width:100%;height:120px;font-size:10px;font-family:monospace;margin-bottom:12px;padding:8px;border:1px solid var(--border);border-radius:4px;resize:vertical}
+.modal input[type=file]{font-size:12px;margin-bottom:12px}
+
+@media(max-width:600px){
+  .frow{grid-template-columns:22px 1fr 18px 1fr 52px}
+  .dash-grid{grid-template-columns:1fr}
+  .meta-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal-root"></div>
+
+<script>
+// ============================================================
+// FIELD DEFINITIONS (スプレッドシート完全対応 No.1〜123)
+// ============================================================
+const SEC = [
+  {id:1,num:'①',title:'基本情報',color:'#1B4332',light:'#D1FAE5',subs:[
+    {id:'1-1',title:'案件情報',fields:[
+      {no:'*',key:'andpadId',lbl:'ANDPADシステムID',req:false,type:'t',hint:'ANDPADシステムID'},
+      {no:1,key:'facilityName',lbl:'施設名',req:true,type:'t',hint:'施主の正式名称＋事業所名'},
+      {no:2,key:'address',lbl:'所在地（住所）',req:true,type:'t',hint:'郵便番号・地番まで含めた完全な住所'},
+      {no:3,key:'latLng',lbl:'緯度・経度',req:false,type:'t',hint:'Google Mapsから取得 / 度表記'},
+      {no:4,key:'buildingUse',lbl:'建物用途',req:true,type:'s',opts:['工場','倉庫','事務所','店舗','物流','学校・公共','その他']},
+      {no:5,key:'buildingAge',lbl:'築年数',req:true,type:'n',unit:'年',hint:'屋根の経年劣化判断'},
+      {no:6,key:'startTarget',lbl:'稼働開始希望時期',req:false,type:'t',hint:'2026年Q3（9月稼働）'},
+    ]},
+    {id:'1-2',title:'担当者情報',fields:[
+      {no:7,key:'clientContact',lbl:'施主側 主担当者',req:true,type:'t',hint:'氏名・所属・役職'},
+      {no:8,key:'clientPhone',lbl:'施主側 連絡先（TEL/Email）',req:true,type:'t',hint:'緊急連絡可能なものを優先'},
+      {no:9,key:'techContact',lbl:'技術窓口（電気主任技術者等）',req:true,type:'t',hint:'電気的成立性確認時の窓口'},
+      {no:10,key:'projectMgr',lbl:'プロジェクト責任者（弊社側）',req:false,type:'t',hint:'本シートの最終確認者'},
+    ]},
+    {id:'1-3',title:'電力契約区分',fields:[
+      {no:11,key:'utilityCompany',lbl:'電力会社（契約先）',req:true,type:'t',hint:'送配電事業者名（小売とは別）'},
+      {no:12,key:'contractType',lbl:'契約種別',req:true,type:'s',opts:['低圧電灯','低圧電力','高圧','特別高圧']},
+      {no:13,key:'electricRate',lbl:'現契約 電気料金単価（実績）',req:true,type:'n',unit:'円/kWh',hint:'直近12ヶ月の請求書平均'},
+    ]},
+  ]},
+  {id:2,num:'②',title:'屋根・設置条件',color:'#1e40af',light:'#DBEAFE',subs:[
+    {id:'2-1',title:'屋根種別・設置方法',fields:[
+      {no:14,key:'roofShape',lbl:'屋根形状',req:true,type:'s',opts:['折板（はぜ締め型）','折板（重ね式）','瓦棒','陸屋根','瓦','スレート','その他']},
+      {no:15,key:'roofMaterial',lbl:'屋根材',req:true,type:'t',hint:'材質・板厚を記載（架台選定の判断材料）'},
+      {no:16,key:'mountingFrame',lbl:'使用架台',req:true,type:'t',hint:'メーカー / 架台種類 / 個数'},
+      {no:17,key:'roofFaces',lbl:'屋根面数',req:true,type:'n',unit:'面',hint:'切妻=2面、寄棟=4面、片流れ=1面'},
+      {no:18,key:'roofTotalArea',lbl:'屋根全体面積',req:true,type:'n',unit:'㎡',hint:'図面または現地実測値'},
+      {no:19,key:'pvEffArea',lbl:'PV設置可能 有効面積',req:true,type:'n',unit:'㎡',hint:'障害物・離隔・点検通路を除く'},
+    ]},
+    {id:'2-2',title:'方位・傾斜',fields:[
+      {no:20,key:'azimuth',lbl:'方位（真南からの偏角）',req:true,type:'t',unit:'度',hint:'真南=0°、東=-90°、西=+90°、各面ごとに記載'},
+      {no:21,key:'roofSlope',lbl:'屋根勾配',req:true,type:'t',unit:'寸 or 度',hint:'発電量試算に必須'},
+    ]},
+    {id:'2-3',title:'障害物・離隔条件',fields:[
+      {no:22,key:'roofObstacles',lbl:'屋根上の障害物',req:true,type:'t',hint:'天窓/ダクト/室外機/避雷針/看板 等を全列挙'},
+      {no:23,key:'shadowSources',lbl:'影の発生源（隣接建物・樹木等）',req:true,type:'t',hint:'周辺建物・樹木の高さと方位'},
+      {no:24,key:'edgeClearance',lbl:'端部離隔（要求値）',req:false,type:'n',unit:'mm',hint:'屋根端から500mm 等'},
+    ]},
+    {id:'2-4',title:'荷重条件（JIS C 8955準拠）',fields:[
+      {no:25,key:'snowDepth',lbl:'設計用 地上積雪量（垂直積雪量）',req:true,type:'n',unit:'m',hint:'JIS C 8955。建設地の特定行政庁指定値'},
+      {no:26,key:'windSpeed',lbl:'基準風速 V₀',req:true,type:'n',unit:'m/s',hint:'JIS C 8955 / 建築基準法施行令87条'},
+      {no:27,key:'roughnessClass',lbl:'地表面粗度区分',req:true,type:'s',opts:['Ⅰ（海上等）','Ⅱ（田園・郊外）','Ⅲ（一般市街地）','Ⅳ（都市部高層密集）']},
+      {no:28,key:'buildingHeight',lbl:'建物高さ H',req:true,type:'n',unit:'m',hint:'GL〜屋根頂部までの高さ'},
+      {no:29,key:'importanceFactor',lbl:'用途係数 I',req:false,type:'n',hint:'通常1.0 / 避難所等は1.32'},
+      {no:30,key:'structuralCalc',lbl:'構造計算書の有無',req:true,type:'s',opts:['有（取得可）','有（取得不可）','無']},
+      {no:31,key:'panelLoadEstimate',lbl:'想定積載荷重（パネル+架台）',req:false,type:'n',unit:'kg/㎡',hint:'通常15〜25 kg/㎡'},
+      {no:32,key:'allowableLoad',lbl:'屋根の許容積載荷重',req:true,type:'n',unit:'kg/㎡',hint:'構造計算書または設計図書から確認'},
+    ]},
+  ]},
+  {id:3,num:'③',title:'電気条件',color:'#1d4ed8',light:'#EFF6FF',subs:[
+    {id:'3-1',title:'受電設備',fields:[
+      {no:33,key:'poleNum',lbl:'電柱番号（引込元電柱）',req:true,type:'t',hint:'複数電柱から受電する場合は全て記載'},
+      {no:34,key:'receptionMethod',lbl:'受電方式',req:true,type:'s',opts:['低圧（電灯）','低圧（動力）','低圧（電灯・動力）','高圧（キュービクル）']},
+      {no:35,key:'receptionVoltage',lbl:'受電電圧',req:true,type:'n',unit:'V',hint:'100/200（低圧）/ 6600（高圧）'},
+      {no:36,key:'contractPower',lbl:'契約電力',req:true,type:'n',unit:'kW',hint:'電力会社との契約上の最大需要電力'},
+      {no:37,key:'receptionPoint',lbl:'受電点（引込柱／キュービクル位置）',req:true,type:'t',hint:'PV接続点との物理距離・配線ルートに必要'},
+      {no:38,key:'transformerCap',lbl:'既設変圧器（主変圧器）容量',req:true,type:'t',unit:'kVA',hint:'PVと既存負荷の容量バランス確認に必須'},
+      {no:39,key:'transformerLoad',lbl:'変圧器の負荷率（実績）',req:false,type:'n',unit:'%',hint:'70%以上は変圧器更新も検討'},
+    ]},
+    {id:'3-2',title:'需要・使用量実績',fields:[
+      {no:40,key:'maxDemand',lbl:'最大需要電力（直近12ヶ月）',req:true,type:'n',unit:'kW',hint:'30分値の最大値。PVのkW逆算根拠'},
+      {no:41,key:'avgDemand',lbl:'平均需要電力',req:true,type:'n',unit:'kW',hint:'年間使用量÷年間稼働時間'},
+      {no:42,key:'annualUsage',lbl:'年間使用電力量',req:true,type:'n',unit:'kWh',hint:'直近12ヶ月の合計。請求書から集計'},
+      {no:43,key:'data30min',lbl:'30分値データの有無',req:true,type:'s',opts:['有（取得済）','取得予定','無'],hint:'自家消費率精度向上の鍵'},
+      {no:44,key:'operatingPattern',lbl:'稼働パターン（曜日・時間帯）',req:true,type:'t',hint:'平日8:00-17:00 / 土日休み等'},
+      {no:45,key:'seasonalChange',lbl:'季節変動の特徴',req:false,type:'t',hint:'夏季ピーク（冷房）等'},
+    ]},
+    {id:'3-3',title:'連系条件',fields:[
+      {no:46,key:'connectionPoint',lbl:'系統連系点（接続予定箇所）',req:true,type:'t',hint:'低圧連系／高圧連系・主遮断器2次 等'},
+      {no:47,key:'simpleStudy',lbl:'簡易検討状況',req:true,type:'s',opts:['未着手','自家消費型（通常無）','申請準備中','申請済']},
+      {no:48,key:'gridConsult',lbl:'系統側 事前相談状況（接続検討）',req:true,type:'s',opts:['50kW未満必要なし','未着手','事前相談中','接続検討申込済','回答受領','接続契約締結']},
+      {no:49,key:'appStatus',lbl:'電力への申請状況',req:true,type:'s',opts:['未申請','申請準備中','申請済（受付待ち）','受付済','承認・契約済']},
+      {no:50,key:'gridWorkCost',lbl:'工事費負担金（提示額）',req:false,type:'n',unit:'万円',hint:'系統側からの提示額'},
+    ]},
+    {id:'3-4',title:'単線結線情報',fields:[
+      {no:51,key:'singleLineDiag',lbl:'単線結線図の有無',req:true,type:'s',opts:['有（最新版）','有（旧版）','無']},
+      {no:52,key:'relaySettings',lbl:'保護リレー設定値（OCR/UVR/OVR等）',req:false,type:'t',hint:'OCR: 50A/0.2s 等'},
+      {no:53,key:'powerFactor',lbl:'受電点の力率',req:false,type:'n',unit:'%',hint:'進相コンデンサ設置状況も記載'},
+      {no:54,key:'harmonics',lbl:'高調波対策の有無',req:false,type:'t',hint:'リアクトル付コンデンサ設置済 等'},
+    ]},
+  ]},
+  {id:4,num:'④',title:'太陽光設備条件',color:'#92400e',light:'#FEF3C7',subs:[
+    {id:'4-1',title:'容量・パネル仕様',fields:[
+      {no:55,key:'pvCapacity',lbl:'想定設置容量',req:true,type:'n',unit:'kW',hint:'屋根面積×係数（折板:0.10 陸屋根:0.12 kW/㎡）からの試算値'},
+      {no:56,key:'annualGenTarget',lbl:'目標発電量（年間）',req:false,type:'n',unit:'kWh',hint:'kW × 1,100〜1,200（地域・方位による）'},
+      {no:57,key:'panelSpec',lbl:'希望パネルメーカー／型式',req:true,type:'t',hint:'塩害地は耐塩仕様必須。指定無ければ「未定」'},
+      {no:58,key:'panelCount',lbl:'パネル枚数（試算値）',req:true,type:'t',hint:'Watt×枚数＝DC容量kW'},
+    ]},
+    {id:'4-2',title:'PCS（パワーコンディショナ）',fields:[
+      {no:59,key:'pcsPhase',lbl:'PCS相別要件',req:true,type:'s',opts:['三相のみ','単相のみ','三相+単相併用'],hint:'受電方式・負荷構成と整合させる'},
+      {no:60,key:'pcsModel',lbl:'PCS型式',req:true,type:'t',hint:'メーカー／型式（複数種類の場合は型式ごとに記載）'},
+      {no:61,key:'pcsConfig',lbl:'PCS構成方式',req:true,type:'s',opts:['集中型','分散型（ストリング型）','マイクロインバータ']},
+      {no:62,key:'pcsRatedOutput',lbl:'PCS定格出力（1台あたり）',req:true,type:'n',unit:'kW'},
+      {no:63,key:'pcsLocation',lbl:'PCS設置場所',req:true,type:'t',hint:'屋外／屋内／キュービクル内。冷却・メンテ性考慮'},
+    ]},
+    {id:'4-3',title:'EMS（上位監視装置）',fields:[
+      {no:64,key:'monitorDevice',lbl:'監視装置',req:true,type:'t',hint:'メーカー / 品名 / 型式'},
+      {no:65,key:'monitorAccessory',lbl:'監視装置付属機器類',req:true,type:'t',hint:'ゲートウェイ等 メーカー / 品名 / 型式'},
+    ]},
+    {id:'4-4',title:'PPA機器',fields:[
+      {no:66,key:'smartMeter',lbl:'スマートメーター',req:true,type:'t',hint:'メーカー / 型式'},
+    ]},
+    {id:'4-5',title:'連系・運用条件（最重要）',fields:[
+      {no:67,key:'reverseFlow',lbl:'逆潮流の有無',req:true,type:'s',opts:['可（余剰売電可）','不可（自家消費前提）','未定'],hint:'可→余剰売電可能 / 不可→RPR必須'},
+      {no:68,key:'rprRequired',lbl:'RPR（逆電力継電器）設置',req:true,type:'s',opts:['必須','不要','検討中'],hint:'逆潮流不可 → 必須'},
+      {no:69,key:'protectRelay',lbl:'保護継電器',req:true,type:'t',hint:'台数 型式（例: 1台 KP-PRRV-RPC）'},
+      {no:70,key:'zpd',lbl:'ZPD',req:true,type:'t',hint:'台数 型式（例: 1台 VOC-1MS2-1）'},
+      {no:71,key:'selfConsumTarget',lbl:'目標自家消費率',req:true,type:'n',unit:'%',hint:'逆潮流不可なら≥95%設計 / 30分値ベースで試算'},
+      {no:72,key:'batteryPresent',lbl:'蓄電池の有無',req:true,type:'s',opts:['有','無','将来増設計画あり']},
+      {no:73,key:'batteryCap',lbl:'蓄電池容量（有の場合）',req:false,type:'n',unit:'kWh',hint:'用途・需要パターンから決定'},
+    ]},
+    {id:'4-6',title:'自立運転・特定負荷（最重要）',fields:[
+      {no:74,key:'standAlone',lbl:'自立運転機能',req:true,type:'s',opts:['必要','不要'],hint:'特定負荷との組み合わせで回路設計'},
+      {no:75,key:'specificLoad',lbl:'特定負荷の有無',req:true,type:'s',opts:['有','無'],hint:'有→自立運転回路の単相/三相分離設計が必要'},
+      {no:76,key:'load1Name',lbl:'特定負荷① 名称',req:false,type:'t'},
+      {no:77,key:'load1Cap',lbl:'特定負荷① 容量',req:false,type:'n',unit:'kW'},
+      {no:78,key:'load1Phase',lbl:'特定負荷① 相別',req:false,type:'s',opts:['単相100V','単相200V','三相200V','三相400V']},
+      {no:79,key:'load1Priority',lbl:'特定負荷① 優先度',req:false,type:'s',opts:['高（停電時 必ず確保）','中','低']},
+      {no:80,key:'load2Name',lbl:'特定負荷② 名称',req:false,type:'t'},
+      {no:81,key:'load2Cap',lbl:'特定負荷② 容量',req:false,type:'n',unit:'kW'},
+      {no:82,key:'load2Phase',lbl:'特定負荷② 相別',req:false,type:'s',opts:['単相100V','単相200V','三相200V','三相400V']},
+      {no:83,key:'load2Priority',lbl:'特定負荷② 優先度',req:false,type:'s',opts:['高（停電時 必ず確保）','中','低']},
+      {no:84,key:'load3Name',lbl:'特定負荷③ 名称',req:false,type:'t'},
+      {no:85,key:'load3Cap',lbl:'特定負荷③ 容量',req:false,type:'n',unit:'kW'},
+      {no:86,key:'load3Phase',lbl:'特定負荷③ 相別',req:false,type:'s',opts:['単相100V','単相200V','三相200V','三相400V']},
+      {no:87,key:'load3Priority',lbl:'特定負荷③ 優先度',req:false,type:'s',opts:['高（停電時 必ず確保）','中','低']},
+      {no:88,key:'totalSpecLoad',lbl:'特定負荷 合計容量',req:false,type:'n',unit:'kW',hint:'PCS自立運転容量の選定根拠'},
+    ]},
+  ]},
+  {id:5,num:'⑤',title:'施工条件',color:'#4c1d95',light:'#EDE9FE',subs:[
+    {id:'5-1',title:'搬入・輸送',fields:[
+      {no:89,key:'distFromYard',lbl:'最寄り資材ヤード／港から現地までの距離',req:false,type:'n',unit:'km',hint:'フェリー区間は別途記載'},
+      {no:90,key:'accessRoad',lbl:'搬入経路の道路状況',req:true,type:'t',hint:'国道→県道→市道。最狭部の幅員(m)を記載'},
+      {no:91,key:'largeVehicle',lbl:'大型車両進入可否',req:true,type:'s',opts:['10t車可','4t車可','2t車可','軽トラのみ'],hint:'橋梁・トンネル制限も確認'},
+      {no:92,key:'cranePlan',lbl:'クレーン車手配',req:true,type:'t',hint:'現地調達可／本土から回送等'},
+      {no:93,key:'accessConstraints',lbl:'搬入導線の制約事項',req:false,type:'t',hint:'高さ／重量／時間帯制限等'},
+    ]},
+    {id:'5-2',title:'現地作業環境',fields:[
+      {no:94,key:'scaffolding',lbl:'足場の必要性',req:true,type:'s',opts:['必要（全周）','必要（一部）','不要'],hint:'屋根高さ・周辺状況による'},
+      {no:95,key:'workHours',lbl:'作業時間制限',req:true,type:'t',hint:'近隣調整による時間帯制限'},
+      {no:96,key:'noiseRestrict',lbl:'騒音・振動の制約',req:false,type:'t',hint:'工業地域／住宅地域。条例上の規制値'},
+      {no:97,key:'utilities',lbl:'電源・水道（仮設）',req:false,type:'t',hint:'施主貸与／別途仮設要'},
+    ]},
+    {id:'5-3',title:'人員・宿泊',fields:[
+      {no:98,key:'localContractor',lbl:'地元施工業者の活用可否',req:true,type:'s',opts:['可','不可'],hint:'不可→本土から派遣→宿泊・日当UP'},
+      {no:99,key:'accommodation',lbl:'宿泊の必要性',req:true,type:'s',opts:['必要','不要（日帰り可）']},
+      {no:100,key:'accommodationInfo',lbl:'宿泊施設の有無・収容人数',req:false,type:'t',hint:'工事ピーク時の同時宿泊可能人数'},
+      {no:101,key:'busySeason',lbl:'繁忙期・閑散期',req:false,type:'t',hint:'観光地等は時期で宿泊確保難易度が変わる'},
+    ]},
+    {id:'5-4',title:'気象・自然条件',fields:[
+      {no:102,key:'saltDamage',lbl:'塩害地域 該当の有無',req:true,type:'s',opts:['重塩害（海岸線200m以内）','塩害（200m〜2km）','非該当（2km超）'],hint:'重塩害・塩害→耐塩仕様パネル・架台必須'},
+      {no:103,key:'heavySnow',lbl:'豪雪地域 該当の有無',req:true,type:'s',opts:['豪雪','一般地域'],hint:'豪雪→雪止め・耐雪架台'},
+      {no:104,key:'workablePeriod',lbl:'工事可能期間（梅雨・台風除く）',req:false,type:'t',hint:'梅雨・台風・冬季凍結等の影響期間'},
+    ]},
+  ]},
+  {id:6,num:'⑥',title:'リスク・制約',color:'#991b1b',light:'#FEE2E2',subs:[
+    {id:'6-1',title:'構造関連の不明点',fields:[
+      {no:105,key:'structuralIssues',lbl:'構造関連の不明点',req:true,type:'a',hint:'屋根材の経年劣化／構造計算書の有無／補強要否'},
+      {no:106,key:'waterproofWarranty',lbl:'屋根防水の保証残期間',req:false,type:'n',unit:'年',hint:'PV施工で保証が切れる可能性'},
+      {no:107,key:'asbestos',lbl:'アスベスト含有の可能性',req:false,type:'s',opts:['有（調査済）','無（調査済）','要調査'],hint:'築古スレート屋根は要事前調査'},
+    ]},
+    {id:'6-2',title:'法規制・許認可',fields:[
+      {no:108,key:'zoningUse',lbl:'用途地域',req:true,type:'t',hint:'建築基準法上の用途地域'},
+      {no:109,key:'heightFireZone',lbl:'高度地区・防火地域',req:false,type:'t',hint:'防火・準防火地域→屋根の防火性能が必要'},
+      {no:110,key:'landscapeOrd',lbl:'景観条例の適用',req:false,type:'s',opts:['有','無'],hint:'色彩・形状制限の有無'},
+      {no:111,key:'elecActNotice',lbl:'電気事業法 上の届出',req:true,type:'t',hint:'50kW以上は保安規程・主任技術者選任要'},
+      {no:112,key:'buildingPermit',lbl:'建築確認申請の要否',req:false,type:'s',opts:['必要','不要'],hint:'工作物として4m超・10kW超は要確認'},
+    ]},
+    {id:'6-3',title:'スケジュール・コスト',fields:[
+      {no:113,key:'scheduleConstraint',lbl:'スケジュール上の制約',req:true,type:'t',hint:'決算期／補助金期限／税制優遇'},
+      {no:114,key:'constructionPeriod',lbl:'希望工期',req:false,type:'t',unit:'ヶ月',hint:'実工事のみ（設計・申請期間は別途）'},
+      {no:115,key:'budget',lbl:'投資予算の上限',req:true,type:'n',unit:'万円',hint:'稟議承認済みの上限額'},
+      {no:116,key:'paybackYears',lbl:'目標回収年数',req:false,type:'n',unit:'年',hint:'一般的には7〜12年'},
+      {no:117,key:'targetIrr',lbl:'目標IRR',req:false,type:'n',unit:'%',hint:'施主のハードルレート'},
+      {no:118,key:'subsidy',lbl:'補助金・税制優遇の活用',req:false,type:'t',hint:'活用予定の制度名・申請ステータス'},
+    ]},
+    {id:'6-4',title:'その他懸念事項',fields:[
+      {no:119,key:'neighborImpact',lbl:'周辺住民への影響',req:false,type:'t',hint:'反射光・騒音・景観等の懸念'},
+      {no:120,key:'futurePlan',lbl:'将来計画との整合',req:false,type:'t',hint:'屋根改修・建物増改築・事業転換の予定'},
+      {no:121,key:'approvalStatus',lbl:'施主社内での承認状況',req:true,type:'t',hint:'稟議の進捗状況。意思決定までのリードタイム把握'},
+      {no:122,key:'competitorStatus',lbl:'競合状況',req:false,type:'t',hint:'他社見積の有無・進捗'},
+      {no:123,key:'otherNotes',lbl:'その他特記事項',req:false,type:'a',hint:'上記以外で設計判断に影響する情報'},
+    ]},
+  ]},
+];
+
+// Meta fields (not numbered in the spec)
+const META_KEYS = ['andpadId','createdDate','lastEditor','finalChecker','estimateEditor','progress','ver'];
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {};
+let metaState = {createdDate:'',lastEditor:'',finalChecker:'',estimateEditor:'',progress:'記入中',ver:'Ver.1.0'};
+let currentTab = 'dashboard';
+const STORE_KEY = 'pv_info_sheet_v1';
+const META_KEY  = 'pv_info_meta_v1';
+
+function loadState(){
+  try{ state = JSON.parse(localStorage.getItem(STORE_KEY)||'{}'); }catch(e){state={};}
+  try{ const m=JSON.parse(localStorage.getItem(META_KEY)||'{}'); metaState={...metaState,...m}; }catch(e){}
+}
+function saveState(){
+  localStorage.setItem(STORE_KEY,JSON.stringify(state));
+  localStorage.setItem(META_KEY,JSON.stringify(metaState));
+  document.getElementById('save-ts').textContent='保存: '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+}
+function getVal(key){ return state[key]??''; }
+function setVal(key,val){ state[key]=val; saveState(); updateProgress(); }
+function setMeta(key,val){ metaState[key]=val; saveState(); if(key==='facilityName'||key==='andpadId') updateHeader();}
+
+// ============================================================
+// PROGRESS CALCULATION
+// ============================================================
+function calcSectionProgress(secId){
+  const sec = SEC.find(s=>s.id===secId);
+  if(!sec) return {filled:0,total:0,pct:0};
+  let total=0,filled=0;
+  sec.subs.forEach(sub=>sub.fields.forEach(f=>{
+    if(f.req){total++;if(getVal(f.key)!=='')filled++;}
+  }));
+  return {filled,total,pct:total?Math.round(filled/total*100):0};
+}
+function calcTotalProgress(){
+  let t=0,f=0;
+  SEC.forEach(s=>{const p=calcSectionProgress(s.id);t+=p.total;f+=p.filled;});
+  return {filled:f,total:t,pct:t?Math.round(f/t*100):0};
+}
+function updateProgress(){
+  // Update tab fill bars
+  SEC.forEach(s=>{
+    const p=calcSectionProgress(s.id);
+    const bar=document.getElementById(`tfill-${s.id}`);
+    if(bar){bar.style.width=p.pct+'%';bar.style.background=s.color;}
+    const tabPct=document.getElementById(`tpct-${s.id}`);
+    if(tabPct) tabPct.textContent=p.pct+'%';
+  });
+  // Update total in header and dashboard
+  const tot=calcTotalProgress();
+  const totEl=document.getElementById('total-pct-txt');
+  if(totEl) totEl.textContent=tot.pct+'%';
+  const totBar=document.getElementById('total-pct-bar');
+  if(totBar) totBar.style.width=tot.pct+'%';
+  const gaugeNum=document.getElementById('gauge-num');
+  if(gaugeNum) gaugeNum.textContent=tot.pct+'%';
+  const gaugeBarFill=document.getElementById('gauge-barfill');
+  if(gaugeBarFill) gaugeBarFill.style.width=tot.pct+'%';
+  // Update section badges on dashboard
+  SEC.forEach(s=>{
+    const p=calcSectionProgress(s.id);
+    const dp=document.getElementById(`dpct-${s.id}`);
+    const db=document.getElementById(`dbar-${s.id}`);
+    const dc=document.getElementById(`dcount-${s.id}`);
+    if(dp){dp.textContent=p.pct+'%';dp.style.color=p.pct===100?'#16a34a':p.pct>50?s.color:s.color;}
+    if(db){db.style.width=p.pct+'%';db.style.background=s.color;}
+    if(dc) dc.textContent=`${p.filled}/${p.total} 必須入力済`;
+  });
+  // Update header facility name
+  updateHeader();
+  // Update checklist
+  renderChecklist();
+}
+function updateHeader(){
+  const f=document.getElementById('header-facility');
+  if(f) f.textContent=getVal('facilityName')||'施設名未入力';
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+function fieldHtml(f){
+  const val=getVal(f.key);
+  const filled=val!=='';
+  let inputHtml='';
+  if(f.type==='s'){
+    const opts=(f.opts||[]).map(o=>`<option value="${esc(o)}"${val===o?' selected':''}>${esc(o)}</option>`).join('');
+    inputHtml=`<select class="${filled?'ok':''}" data-key="${f.key}" onchange="handleChange(this)"><option value="">-- 選択 --</option>${opts}</select>`;
+  } else if(f.type==='a'){
+    inputHtml=`<textarea class="${filled?'ok':''}" data-key="${f.key}" placeholder="${esc(f.hint||'')}" oninput="handleChange(this)">${esc(val)}</textarea>`;
+  } else {
+    const itype=f.type==='n'?'number':'text';
+    inputHtml=`<input type="${itype}" class="${filled?'ok':''}" data-key="${f.key}" value="${esc(val)}" placeholder="${esc(f.hint||'')}" oninput="handleChange(this)">`;
+  }
+  const reqEmpty=f.req&&!filled;
+  return `<div class="frow${reqEmpty?' req-row':''}">
+    <div class="fno">${f.no}</div>
+    <div class="flbl"><span class="flbl-txt">${esc(f.lbl)}</span></div>
+    <div class="freq">${f.req?'★':''}</div>
+    <div class="finp">${inputHtml}</div>
+    <div class="funit">${f.unit?esc(f.unit):''}</div>
+  </div>`;
+}
+function subHtml(sub,secColor){
+  const fields=sub.fields;
+  const req=fields.filter(f=>f.req);
+  const filled=req.filter(f=>getVal(f.key)!=='');
+  const pct=req.length?Math.round(filled.length/req.length*100):100;
+  return `<div class="sub-card">
+    <div class="sub-hd" style="background:${secColor}">
+      <span>▸ ${esc(sub.id)}　${esc(sub.title)}</span>
+      <span class="sub-hd-pct">${filled.length}/${req.length}必須  ${pct}%</span>
+    </div>
+    <div class="field-table">${fields.map(fieldHtml).join('')}</div>
+  </div>`;
+}
+function sectionHtml(sec){
+  return `<div class="panel${currentTab===sec.id?' on':''}" id="panel-${sec.id}">
+    ${sec.subs.map(sub=>subHtml(sub,sec.color)).join('')}
+  </div>`;
+}
+
+function dashboardHtml(){
+  const tot=calcTotalProgress();
+  const sectionRows=SEC.map(s=>{
+    const p=calcSectionProgress(s.id);
+    return `<div class="dash-row" onclick="switchTab(${s.id})">
+      <div class="dash-badge" style="background:${s.color}">${s.num}</div>
+      <div class="dash-rname">${esc(s.num)} ${esc(s.title)}</div>
+      <div class="dash-pct" id="dpct-${s.id}" style="color:${s.color}">${p.pct}%</div>
+      <div class="dash-bar"><div class="dash-barfill" id="dbar-${s.id}" style="width:${p.pct}%;background:${s.color}"></div></div>
+    </div>`;
+  }).join('');
+  const sectionCounts=SEC.map(s=>{
+    const p=calcSectionProgress(s.id);
+    return `<div class="dash-row" onclick="switchTab(${s.id})" style="gap:6px">
+      <div class="dash-badge" style="background:${s.color};width:20px;height:20px;font-size:10px">${s.num}</div>
+      <div style="flex:1;font-size:11px">${s.title}</div>
+      <div style="font-size:10px;color:var(--muted)" id="dcount-${s.id}">${p.filled}/${p.total} 必須入力済</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="panel${currentTab==='dashboard'?' on':''}" id="panel-dashboard">
+  <div class="dash-grid">
+    <div class="dash-card">
+      <h3>📊 全体進捗</h3>
+      <div class="total-gauge">
+        <div class="gauge-num" id="gauge-num">${tot.pct}%</div>
+        <div class="gauge-lbl">必須項目入力完了率（${tot.filled}/${tot.total}）</div>
+        <div class="gauge-bar"><div class="gauge-barfill" id="gauge-barfill" style="width:${tot.pct}%"></div></div>
+      </div>
+      ${sectionRows}
+    </div>
+    <div class="dash-card">
+      <h3>📋 案件メタ情報</h3>
+      <div class="meta-grid">
+        <div class="meta-item"><label>作成日</label><input type="date" value="${metaState.createdDate||''}" oninput="handleMeta('createdDate',this.value)"></div>
+        <div class="meta-item"><label>版</label><input type="text" value="${esc(metaState.ver||'')}" placeholder="Ver.1.0" oninput="handleMeta('ver',this.value)"></div>
+        <div class="meta-item"><label>記入者</label><input type="text" value="${esc(metaState.lastEditor||'')}" placeholder="担当者名" oninput="handleMeta('lastEditor',this.value)"></div>
+        <div class="meta-item"><label>最終確認者</label><input type="text" value="${esc(metaState.finalChecker||'')}" placeholder="確認者名" oninput="handleMeta('finalChecker',this.value)"></div>
+        <div class="meta-item"><label>見積書作成者</label><input type="text" value="${esc(metaState.estimateEditor||'')}" placeholder="見積担当者名" oninput="handleMeta('estimateEditor',this.value)"></div>
+        <div class="meta-item"><label>進捗</label>
+          <select oninput="handleMeta('progress',this.value)">
+            ${['記入中','確認待ち','確認済み','見積中','完了'].map(o=>`<option${metaState.progress===o?' selected':''}>${o}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="dash-card">
+      <h3>📁 GitHub保存ガイド</h3>
+      <div style="font-size:11px;color:var(--muted);line-height:1.8">
+        <div style="margin-bottom:8px">① <strong>JSONエクスポート</strong> → ファイルダウンロード</div>
+        <div style="margin-bottom:8px">② GitHubリポジトリの <code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">projects/</code> フォルダへ配置</div>
+        <div style="margin-bottom:8px">ファイル名：<code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">${(getVal('andpadId')||'ANDPAD_ID')}-${(getVal('facilityName')||'施設名').replace(/\s/g,'-')}.json</code></div>
+        <div style="margin-bottom:8px">③ commitメッセージ例：<br><code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">feat: ${getVal('facilityName')||'施設名'} 情報収集シート更新</code></div>
+        <div style="color:#666">チームメンバーは同ファイルをインポートして閲覧・編集できます。</div>
+      </div>
+    </div>
+    <div class="dash-card">
+      <h3>⚡ 設計判断チェックポイント</h3>
+      <div style="font-size:11px;line-height:2">
+        <div>①逆潮流の有無 → <strong style="color:${getVal('reverseFlow')?'#16a34a':getVal('reverseFlow')===''?'var(--req)':'var(--req)'}">RPR / PCS制御方式</strong></div>
+        <div>②特定負荷有無 → <strong>自立運転回路 / 単三分離</strong></div>
+        <div>③PCS相別 → <strong>受電方式 / 負荷構成との整合</strong></div>
+        <div>④JIS C 8955 → <strong>積雪・風速・粗度・高さ・許容荷重</strong></div>
+        <div>⑤施工条件 → <strong>搬入×大型車×地元業者×宿泊</strong></div>
+      </div>
+    </div>
+  </div>
+  <div id="checklist-area"></div>
+</div>`;
+}
+
+function checklistHtml(){
+  const checks=[
+    {title:'①基本情報',keys:['facilityName','address','buildingUse','buildingAge','clientContact','clientPhone','techContact','utilityCompany','contractType','electricRate']},
+    {title:'②屋根・設置条件',keys:['roofShape','roofMaterial','mountingFrame','roofFaces','roofTotalArea','pvEffArea','azimuth','roofSlope','roofObstacles','shadowSources','snowDepth','windSpeed','roughnessClass','buildingHeight','structuralCalc','allowableLoad']},
+    {title:'③電気条件',keys:['poleNum','receptionMethod','receptionVoltage','contractPower','receptionPoint','transformerCap','maxDemand','avgDemand','annualUsage','data30min','operatingPattern','connectionPoint','simpleStudy','gridConsult','appStatus','singleLineDiag']},
+    {title:'④太陽光設備条件（重要）',keys:['pvCapacity','panelSpec','panelCount','pcsPhase','pcsModel','pcsConfig','pcsRatedOutput','pcsLocation','monitorDevice','monitorAccessory','smartMeter','reverseFlow','rprRequired','protectRelay','zpd','selfConsumTarget','batteryPresent','standAlone','specificLoad']},
+    {title:'⑤施工条件',keys:['accessRoad','largeVehicle','cranePlan','scaffolding','workHours','localContractor','accommodation','saltDamage','heavySnow']},
+    {title:'⑥リスク・制約',keys:['structuralIssues','zoningUse','elecActNotice','scheduleConstraint','budget','approvalStatus']},
+  ];
+  // Find labels
+  const labelMap={};
+  SEC.forEach(s=>s.subs.forEach(sub=>sub.fields.forEach(f=>{labelMap[f.key]=f.lbl;})));
+  return checks.map(c=>{
+    const missing=c.keys.filter(k=>getVal(k)==='');
+    const ok=missing.length===0;
+    return `<div class="chk-section">
+      <h3>${c.title}</h3>
+      <div class="chk-item">
+        <div class="chk-icon ${ok?'chk-ok':'chk-ng'}">${ok?'✓':'✗'}</div>
+        <div class="chk-body">
+          <div class="chk-title">${ok?'記入完了 — 次工程へ進められます':'未記入の必須項目があります'}</div>
+          ${!ok?`<div class="chk-fields">未記入: ${missing.map(k=>labelMap[k]||k).join(' / ')}</div>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderChecklist(){
+  const html=`<div class="dash-card"><h3>✅ 記入完了チェック — 設計着手前に確認</h3>${checklistHtml()}</div>`;
+  const el=document.getElementById('checklist-area');
+  const el2=document.getElementById('checklist-area-tab');
+  if(el) el.innerHTML=html;
+  if(el2) el2.innerHTML=html;
+}
+
+function tabsHtml(){
+  const tabs=[
+    {id:'dashboard',label:'ダッシュボード',icon:'📋'},
+    ...SEC.map(s=>({id:s.id,label:`${s.num} ${s.title}`,color:s.color})),
+    {id:'checklist',label:'✅ チェック',icon:''},
+  ];
+  return tabs.map(t=>{
+    const sec=SEC.find(s=>s.id===t.id);
+    const p=sec?calcSectionProgress(sec.id):{pct:0};
+    const isOn=currentTab===t.id;
+    return `<button class="tab${isOn?' on':''}" onclick="switchTab('${t.id}')">
+      ${esc(t.label)}
+      ${sec?`<div class="tab-fill"><div class="tab-fill-bar" id="tfill-${t.id}" style="width:${p.pct}%;background:${sec.color}"></div></div>`:''}
+    </button>`;
+  }).join('');
+}
+
+function renderApp(){
+  const tot=calcTotalProgress();
+  document.getElementById('app').innerHTML=`
+    <div class="hdr">
+      <span class="hdr-logo">☀ 太陽光PJ 情報収集ツール</span>
+      <span class="hdr-facility" id="header-facility">${esc(getVal('facilityName')||'施設名未入力')}</span>
+      <span class="hdr-save" id="save-ts">未保存</span>
+      <div class="hdr-btns print-hide">
+        <button class="btn btn-wh" onclick="showImport()">📂 読込</button>
+        <button class="btn btn-green" onclick="doExport()">💾 エクスポート</button>
+        <button class="btn btn-wh" onclick="window.print()">🖨 印刷</button>
+        <button class="btn btn-red" onclick="confirmClear()">🗑 クリア</button>
+      </div>
+    </div>
+    <div class="tabs print-hide" id="tabs-bar">${tabsHtml()}</div>
+    <div class="main">
+      ${dashboardHtml()}
+      ${SEC.map(sectionHtml).join('')}
+      <div class="panel${currentTab==='checklist'?' on':''}" id="panel-checklist">
+        <div id="checklist-area-tab"></div>
+      </div>
+    </div>
+  `;
+  saveState();
+}
+
+// ============================================================
+// EVENTS
+// ============================================================
+function handleChange(el){
+  const key=el.dataset.key;
+  const val=el.value;
+  state[key]=val;
+  if(val!==''){el.classList.add('ok');el.classList.remove('req-empty');}
+  else{el.classList.remove('ok');}
+  saveState();
+  updateProgress();
+}
+function handleMeta(key,val){
+  metaState[key]=val;
+  saveState();
+  if(key==='facilityName') updateHeader();
+}
+function switchTab(id){
+  // Normalize: section IDs are numbers; dashboard/checklist are strings
+  const nid = (id!=='dashboard'&&id!=='checklist') ? Number(id) : id;
+  currentTab=nid;
+  // Update tab classes
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  const tabEls=document.querySelectorAll('.tab');
+  const tabs=[{id:'dashboard'},...SEC.map(s=>({id:s.id})),{id:'checklist'}];
+  tabs.forEach((t,i)=>{if(t.id===nid&&tabEls[i]) tabEls[i].classList.add('on');});
+  // Update panel visibility
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  const panel=document.getElementById(`panel-${nid}`);
+  if(panel) panel.classList.add('on');
+  window.scrollTo(0,0);
+  if(nid==='checklist') renderChecklist();
+}
+
+// ============================================================
+// EXPORT / IMPORT
+// ============================================================
+function doExport(){
+  const facility=(getVal('facilityName')||'施設名').replace(/[\s\/\\:*?"<>|]/g,'-');
+  const andpad=(getVal('andpadId')||'ANDPAD_ID');
+  const payload={
+    _meta:{...metaState,exportedAt:new Date().toISOString(),tool:'pv-info-sheet-v1'},
+    data:{...state}
+  };
+  const json=JSON.stringify(payload,null,2);
+  const blob=new Blob([json],{type:'application/json;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`${andpad}-${facility}.json`;a.click();
+  URL.revokeObjectURL(url);
+}
+function showImport(){
+  document.getElementById('modal-root').innerHTML=`
+    <div class="modal-backdrop" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <h3>📂 JSONファイルを読み込む</h3>
+        <p>GitHubからダウンロードしたJSONファイルを選択するか、<br>JSONテキストを直接貼り付けてください。</p>
+        <div><input type="file" id="import-file" accept=".json" onchange="handleFileSelect(this)"></div>
+        <textarea id="import-json" placeholder='{"_meta":{...},"data":{...}}'></textarea>
+        <div class="modal-btns">
+          <button class="btn btn-outline" onclick="closeModal()">キャンセル</button>
+          <button class="btn btn-green" onclick="doImport()">読み込む</button>
+        </div>
+      </div>
+    </div>`;
+}
+function handleFileSelect(input){
+  const file=input.files[0];if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{document.getElementById('import-json').value=e.target.result;};
+  reader.readAsText(file);
+}
+function doImport(){
+  try{
+    const raw=document.getElementById('import-json').value;
+    const parsed=JSON.parse(raw);
+    if(parsed.data){
+      state={...parsed.data};
+      if(parsed._meta) metaState={...metaState,...parsed._meta};
+    } else {
+      state={...parsed};
+    }
+    saveState();
+    closeModal();
+    renderApp();
+    updateProgress();
+    alert('✅ データを読み込みました。');
+  }catch(e){alert('❌ 読み込みエラー: JSONが正しくありません。\n'+e.message);}
+}
+function closeModal(){document.getElementById('modal-root').innerHTML='';}
+function confirmClear(){
+  document.getElementById('modal-root').innerHTML=`
+    <div class="modal-backdrop">
+      <div class="modal">
+        <h3>🗑 データをクリア</h3>
+        <p>全ての入力データを削除します。<br>この操作は元に戻せません。<br><strong>エクスポートで事前にバックアップしてください。</strong></p>
+        <div class="modal-btns">
+          <button class="btn btn-outline" onclick="closeModal()">キャンセル</button>
+          <button class="btn btn-red" onclick="doClear()">削除する</button>
+        </div>
+      </div>
+    </div>`;
+}
+function doClear(){
+  state={};metaState={createdDate:'',lastEditor:'',finalChecker:'',estimateEditor:'',progress:'記入中',ver:'Ver.1.0'};
+  saveState();closeModal();renderApp();updateProgress();
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function esc(s){
+  if(!s&&s!==0) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+loadState();
+renderApp();
+updateProgress();
+// After render, update progress bars
+setTimeout(()=>updateProgress(),50);
+</script>
+</body>
+</html>
