@@ -32,6 +32,12 @@ body{font-family:"Hiragino Sans","Yu Gothic UI",system-ui,sans-serif;font-size:1
 .btn-red{background:#dc2626;color:#fff}.btn-red:hover{background:#b91c1c}
 .btn-solid{background:var(--c1);color:#fff}.btn-solid:hover{background:#2d5f47}
 .btn-outline{background:#fff;color:var(--c1);border:1px solid var(--c1)}.btn-outline:hover{background:var(--c1p)}
+.btn-sheet{background:#0f9d58;color:#fff;border:1px solid #0a7c45}.btn-sheet:hover{background:#0a7c45}.btn-sheet:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:6px;font-size:12px;font-weight:700;color:#fff;z-index:2000;box-shadow:0 4px 16px rgba(0,0,0,.25);animation:toastIn .3s ease}
+.toast-ok{background:#16a34a}.toast-ng{background:#dc2626}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
 /* ── TABS ── */
 .tabs{background:#fff;border-bottom:2px solid var(--border);position:sticky;top:48px;z-index:190;display:flex;overflow-x:auto;padding:0 12px;gap:2px}
@@ -589,6 +595,7 @@ function renderApp(){
       <div class="hdr-btns print-hide">
         <button class="btn btn-wh" onclick="showImport()">📂 読込</button>
         <button class="btn btn-green" onclick="doExport()">💾 エクスポート</button>
+        <button class="btn btn-sheet" id="btn-sheet" onclick="exportToSheet()">📊 スプレッドシートに出力</button>
         <button class="btn btn-wh" onclick="window.print()">🖨 印刷</button>
         <button class="btn btn-red" onclick="confirmClear()">🗑 クリア</button>
       </div>
@@ -725,6 +732,54 @@ function extractAndpadId(val){
   const m=val.match(/andpad\.jp\/[^/]*\/(\d+)/)||val.match(/andpad\.jp\/.*[?&]id=(\d+)/);
   if(m) return m[1];
   return val.replace(/\s/g,'');
+}
+
+// ============================================================
+// EXPORT TO GOOGLE SPREADSHEET (via GAS)
+// ============================================================
+const GAS_URL = 'YOUR_GAS_WEB_APP_URL_HERE';
+
+function showToast(msg, ok){
+  const el = document.createElement('div');
+  el.className = 'toast ' + (ok ? 'toast-ok' : 'toast-ng');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+function exportToSheet(){
+  const btn = document.getElementById('btn-sheet');
+  if (!btn || btn.disabled) return;
+
+  if (GAS_URL === 'YOUR_GAS_WEB_APP_URL_HERE') {
+    showToast('GASのウェブアプリURLが未設定です。GAS_URLを設定してください。', false);
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '📊 送信中…';
+
+  const payload = {
+    _meta: { ...metaState, exportedAt: new Date().toISOString(), tool: 'pv-info-sheet-v1' },
+    data: { ...state }
+  };
+
+  fetch(GAS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload)
+  })
+  .then(() => {
+    showToast('スプレッドシートへの出力が完了しました', true);
+  })
+  .catch(err => {
+    showToast('送信に失敗しました: ' + err.message, false);
+  })
+  .finally(() => {
+    btn.disabled = false;
+    btn.textContent = '📊 スプレッドシートに出力';
+  });
 }
 
 // ============================================================
