@@ -118,7 +118,8 @@ select{-webkit-appearance:auto}
 /* ── PRINT ── */
 @media print{
   .hdr .hdr-btns,.tabs,.print-hide{display:none!important}
-  .panel{display:block!important}
+  .panel{display:block!important;break-before:page}
+  .panel:first-of-type{break-before:auto}
   .sub-card{break-inside:avoid;box-shadow:none;border:1px solid #ccc}
   body{font-size:11px}
 }
