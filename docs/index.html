@@ -601,8 +601,7 @@ function renderApp(){
       <div class="hdr-btns print-hide">
         <button class="btn btn-wh" onclick="showImport()">📂 読込</button>
         <button class="btn btn-green" onclick="doExport()">💾 エクスポート</button>
-        <button class="btn btn-sheet" id="btn-sheet" onclick="exportToSheet()">📊 スプレッドシートに出力</button>
-        <button class="btn btn-green" onclick="sendToGAS()" style="background:#1d4ed8">📤 GAS送信</button>
+        <button class="btn btn-sheet" id="btn-sheet" onclick="sendToGAS()">📊 スプレッドシートに送信</button>
         <button class="btn btn-wh" onclick="window.print()">🖨 印刷</button>
         <button class="btn btn-red" onclick="confirmClear()">🗑 クリア</button>
       </div>
@@ -754,48 +753,10 @@ function showToast(msg, ok){
   setTimeout(() => el.remove(), 3500);
 }
 
-function exportToSheet(){
-  const btn = document.getElementById('btn-sheet');
-  if (!btn || btn.disabled) return;
-
-  if (GAS_URL === 'YOUR_GAS_WEB_APP_URL_HERE') {
-    showToast('GASのウェブアプリURLが未設定です。GAS_URLを設定してください。', false);
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = '📊 送信中…';
-
-  const payload = {
-    _meta: { ...metaState, exportedAt: new Date().toISOString(), tool: 'pv-info-sheet-v1' },
-    data: { ...state }
-  };
-
-  fetch(GAS_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(payload)
-  })
-  .then(() => {
-    showToast('スプレッドシートへの出力が完了しました', true);
-  })
-  .catch(err => {
-    showToast('送信に失敗しました: ' + err.message, false);
-  })
-  .finally(() => {
-    btn.disabled = false;
-    btn.textContent = '📊 スプレッドシートに出力';
-  });
-}
 
 // ============================================================
 // GAS スプレッドシート送信
 // ============================================================
-const GAS_URL_KEY = 'pv_info_gas_url';
-function getGasUrl(){ return localStorage.getItem(GAS_URL_KEY)||''; }
-function setGasUrl(url){ localStorage.setItem(GAS_URL_KEY, url); }
-
 function buildSpreadsheetPayload(){
   const headers = [];
   const values = [];
@@ -830,35 +791,24 @@ function buildSpreadsheetPayload(){
 }
 
 function sendToGAS(){
-  let url = getGasUrl();
-  if(!url){
-    url = prompt('GASウェブアプリのURLを入力してください\n（初回のみ。以降はブラウザに保存されます）');
-    if(!url) return;
-    setGasUrl(url);
-  }
-  const payload = buildSpreadsheetPayload();
-  const btn = event.target;
+  const btn = document.getElementById('btn-sheet');
+  if (!btn || btn.disabled) return;
   btn.disabled = true;
-  btn.textContent = '送信中...';
-  fetch(url, {
+  btn.textContent = '📊 送信中…';
+  const payload = buildSpreadsheetPayload();
+  fetch(GAS_URL, {
     method: 'POST',
     mode: 'no-cors',
     headers: {'Content-Type': 'text/plain'},
     body: JSON.stringify(payload)
   }).then(()=>{
-    alert('✅ スプレッドシートへ送信しました。\n（no-corsモードのため詳細レスポンスは取得できません）');
+    showToast('スプレッドシートへの送信が完了しました', true);
   }).catch(err=>{
-    alert('❌ 送信エラー: '+err.message);
+    showToast('送信に失敗しました: ' + err.message, false);
   }).finally(()=>{
     btn.disabled = false;
-    btn.textContent = '📤 スプレッドシート送信';
+    btn.textContent = '📊 スプレッドシートに送信';
   });
-}
-
-function showGasUrlSetting(){
-  const current = getGasUrl()||'（未設定）';
-  const newUrl = prompt('GASウェブアプリURLを変更します\n\n現在: '+current+'\n\n新しいURLを入力:', getGasUrl()||'');
-  if(newUrl!==null) setGasUrl(newUrl);
 }
 
 // ============================================================
