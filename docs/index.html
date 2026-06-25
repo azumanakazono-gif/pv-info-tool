@@ -132,6 +132,11 @@ select{-webkit-appearance:auto}
 .modal textarea{width:100%;height:120px;font-size:10px;font-family:monospace;margin-bottom:12px;padding:8px;border:1px solid var(--border);border-radius:4px;resize:vertical}
 .modal input[type=file]{font-size:12px;margin-bottom:12px}
 
+/* ── DROP OVERLAY ── */
+.drop-overlay{position:fixed;inset:0;z-index:9999;background:rgba(27,67,50,.12);border:4px dashed var(--c1l);pointer-events:none;display:none;align-items:center;justify-content:center}
+.drop-overlay.active{display:flex}
+.drop-overlay-msg{background:#fff;padding:16px 32px;border-radius:8px;font-size:15px;font-weight:700;color:var(--c1);box-shadow:0 4px 20px rgba(0,0,0,.15)}
+
 @media(max-width:600px){
   .frow{grid-template-columns:22px 1fr 18px 1fr 52px}
   .dash-grid{grid-template-columns:1fr}
@@ -140,6 +145,7 @@ select{-webkit-appearance:auto}
 </style>
 </head>
 <body>
+<div class="drop-overlay" id="drop-overlay"><div class="drop-overlay-msg">📂 JSONファイルをドロップして読み込み</div></div>
 <div id="app"></div>
 <div id="modal-root"></div>
 
@@ -596,6 +602,7 @@ function renderApp(){
         <button class="btn btn-wh" onclick="showImport()">📂 読込</button>
         <button class="btn btn-green" onclick="doExport()">💾 エクスポート</button>
         <button class="btn btn-sheet" id="btn-sheet" onclick="exportToSheet()">📊 スプレッドシートに出力</button>
+        <button class="btn btn-green" onclick="sendToGAS()" style="background:#1d4ed8">📤 GAS送信</button>
         <button class="btn btn-wh" onclick="window.print()">🖨 印刷</button>
         <button class="btn btn-red" onclick="confirmClear()">🗑 クリア</button>
       </div>
@@ -781,6 +788,109 @@ function exportToSheet(){
     btn.textContent = '📊 スプレッドシートに出力';
   });
 }
+
+// ============================================================
+// GAS スプレッドシート送信
+// ============================================================
+const GAS_URL_KEY = 'pv_info_gas_url';
+function getGasUrl(){ return localStorage.getItem(GAS_URL_KEY)||''; }
+function setGasUrl(url){ localStorage.setItem(GAS_URL_KEY, url); }
+
+function buildSpreadsheetPayload(){
+  const headers = [];
+  const values = [];
+  headers.push('送信日時');
+  values.push(new Date().toLocaleString('ja-JP'));
+  headers.push('ANDPADシステムID');
+  values.push(getVal('andpadId')||'');
+  const metaMap = {
+    createdDate:'作成日', ver:'版', lastEditor:'記入者',
+    finalChecker:'最終確認者', estimateEditor:'見積書作成者', progress:'進捗'
+  };
+  Object.keys(metaMap).forEach(k=>{
+    headers.push(metaMap[k]);
+    values.push(metaState[k]||'');
+  });
+  SEC.forEach(sec=>{
+    sec.subs.forEach(sub=>{
+      sub.fields.forEach(f=>{
+        if(f.key==='andpadId') return;
+        const label = 'No.'+(f.no==='*'?'-':f.no)+' '+f.lbl;
+        headers.push(label);
+        values.push(getVal(f.key));
+      });
+    });
+  });
+  return {
+    headers: headers,
+    values: values,
+    andpadId: getVal('andpadId')||'',
+    facilityName: getVal('facilityName')||''
+  };
+}
+
+function sendToGAS(){
+  let url = getGasUrl();
+  if(!url){
+    url = prompt('GASウェブアプリのURLを入力してください\n（初回のみ。以降はブラウザに保存されます）');
+    if(!url) return;
+    setGasUrl(url);
+  }
+  const payload = buildSpreadsheetPayload();
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+  fetch(url, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type': 'text/plain'},
+    body: JSON.stringify(payload)
+  }).then(()=>{
+    alert('✅ スプレッドシートへ送信しました。\n（no-corsモードのため詳細レスポンスは取得できません）');
+  }).catch(err=>{
+    alert('❌ 送信エラー: '+err.message);
+  }).finally(()=>{
+    btn.disabled = false;
+    btn.textContent = '📤 スプレッドシート送信';
+  });
+}
+
+function showGasUrlSetting(){
+  const current = getGasUrl()||'（未設定）';
+  const newUrl = prompt('GASウェブアプリURLを変更します\n\n現在: '+current+'\n\n新しいURLを入力:', getGasUrl()||'');
+  if(newUrl!==null) setGasUrl(newUrl);
+}
+
+// ============================================================
+// DRAG & DROP IMPORT
+// ============================================================
+(function(){
+  let dragCounter=0;
+  const ov=()=>document.getElementById('drop-overlay');
+  document.addEventListener('dragenter',e=>{e.preventDefault();dragCounter++;ov().classList.add('active');});
+  document.addEventListener('dragleave',e=>{e.preventDefault();dragCounter--;if(dragCounter<=0){dragCounter=0;ov().classList.remove('active');}});
+  document.addEventListener('dragover',e=>{e.preventDefault();});
+  document.addEventListener('drop',e=>{
+    e.preventDefault();dragCounter=0;ov().classList.remove('active');
+    const file=e.dataTransfer.files[0];
+    if(!file||!file.name.endsWith('.json')) return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      try{
+        const parsed=JSON.parse(ev.target.result);
+        if(parsed.data){
+          state={...parsed.data};
+          if(parsed._meta) metaState={...metaState,...parsed._meta};
+        } else {
+          state={...parsed};
+        }
+        saveState();renderApp();updateProgress();
+        alert('✅ ドロップしたファイルからデータを読み込みました。');
+      }catch(err){alert('❌ 読み込みエラー: JSONが正しくありません。\n'+err.message);}
+    };
+    reader.readAsText(file);
+  });
+})();
 
 // ============================================================
 // INIT
