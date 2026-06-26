@@ -445,7 +445,7 @@ function fieldHtml(f){
     inputHtml=`<input type="${itype}" class="${filled?'ok':''}" data-key="${f.key}" value="${esc(val)}" placeholder="${esc(f.hint||'')}" oninput="handleChange(this)">`;
   }
   const reqEmpty=f.req&&!filled;
-  const linkBtn=f.key==='andpadUrl'?`<a class="btn-link${filled?'':' disabled'}" id="andpad-link" ${filled?'href="'+esc(val)+'" target="_blank" rel="noopener"':''} onclick="if(!getVal('andpadUrl'))event.preventDefault()">🔗 リンクを開く</a>`:'';
+  const linkBtn=f.key==='andpadUrl'?`<a class="btn-link${filled?'':' disabled'}" id="andpad-link" ${filled?'href="'+esc(val)+'"':''} target="_blank" rel="noopener noreferrer" onclick="if(!getVal('andpadUrl')){event.preventDefault();return;}window.open(getVal('andpadUrl'),'_blank');event.preventDefault();">🔗 リンクを開く</a>`:'';
   return `<div class="frow${reqEmpty?' req-row':''}">
     <div class="fno">${f.no}</div>
     <div class="flbl"><span class="flbl-txt">${esc(f.lbl)}</span></div>
