@@ -70,6 +70,12 @@ body{font-family:"Hiragino Sans","Yu Gothic UI",system-ui,sans-serif;font-size:1
 .btn-link{margin-left:6px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--c1);border:1px solid var(--c1);border-radius:4px;text-decoration:none;white-space:nowrap;cursor:pointer;flex-shrink:0}
 .btn-link:hover{background:var(--c1p)}
 .btn-link.disabled{opacity:.35;pointer-events:none;cursor:default}
+.multi-wrap{display:flex;flex-direction:column;gap:4px;width:100%}
+.multi-row{display:flex;align-items:center;gap:4px}
+.multi-row input{flex:1}
+.btn-multi{padding:2px 6px;border:none;border-radius:3px;font-size:11px;cursor:pointer;font-family:inherit;line-height:1.4}
+.btn-multi-add{background:var(--c1p);color:var(--c1)}.btn-multi-add:hover{background:#b0e8cc}
+.btn-multi-del{background:#fee2e2;color:#dc2626}.btn-multi-del:hover{background:#fecaca}
 
 /* ── INPUTS ── */
 input[type=text],input[type=number],select,textarea{width:100%;padding:5px 7px;border:1px solid #c8ddd4;border-radius:4px;font-family:inherit;font-size:12px;color:var(--text);background:#fff;transition:.15s}
@@ -217,8 +223,8 @@ const SEC = [
       {no:35,key:'receptionVoltage',lbl:'受電電圧',req:true,type:'n',unit:'V',hint:'100/200（低圧）/ 6600（高圧）'},
       {no:36,key:'contractPower',lbl:'契約電力',req:true,type:'n',unit:'kW',hint:'電力会社との契約上の最大需要電力'},
       {no:37,key:'receptionPoint',lbl:'受電点（引込柱／キュービクル位置）',req:true,type:'t',hint:'PV接続点との物理距離・配線ルートに必要'},
-      {no:38,key:'transformerCapSingle',lbl:'既設変圧器（主変圧器）容量（単相）',req:true,type:'n',unit:'kVA',hint:'単相変圧器の容量'},
-      {no:38,key:'transformerCapThree',lbl:'既設変圧器（主変圧器）容量（三相）',req:true,type:'n',unit:'kVA',hint:'三相変圧器の容量'},
+      {no:38,key:'transformerCapSingle',lbl:'既設変圧器（主変圧器）容量（単相）',req:true,type:'multi',unit:'kVA',hint:'単相変圧器の容量'},
+      {no:38,key:'transformerCapThree',lbl:'既設変圧器（主変圧器）容量（三相）',req:true,type:'multi',unit:'kVA',hint:'三相変圧器の容量'},
       {no:39,key:'transformerLoad',lbl:'変圧器の負荷率（実績）',req:false,type:'n',unit:'%',hint:'70%以上は変圧器更新も検討'},
     ]},
     {id:'3-2',title:'需要・使用量実績',fields:[
@@ -439,6 +445,13 @@ function fieldHtml(f){
   if(f.type==='s'){
     const opts=(f.opts||[]).map(o=>`<option value="${esc(o)}"${val===o?' selected':''}>${esc(o)}</option>`).join('');
     inputHtml=`<select class="${filled?'ok':''}" data-key="${f.key}" onchange="handleChange(this)"><option value="">-- 選択 --</option>${opts}</select>`;
+  } else if(f.type==='multi'){
+    const vals=val?val.split(',').map(v=>v.trim()):[''];
+    const rows=vals.map((v,i)=>{
+      const del=i>0?`<button class="btn-multi btn-multi-del" onclick="multiDel('${f.key}',${i})">❌</button>`:'';
+      return `<div class="multi-row"><input type="number" value="${esc(v)}" placeholder="${esc(f.hint||'')}" oninput="multiUpdate('${f.key}',this,${i})">${del}</div>`;
+    }).join('');
+    inputHtml=`<div class="multi-wrap" id="multi-${f.key}">${rows}<button class="btn-multi btn-multi-add" onclick="multiAdd('${f.key}')">➕ 追加</button></div>`;
   } else if(f.type==='a'){
     inputHtml=`<textarea class="${filled?'ok':''}" data-key="${f.key}" placeholder="${esc(f.hint||'')}" oninput="handleChange(this)">${esc(val)}</textarea>`;
   } else {
@@ -649,6 +662,35 @@ function updateDrawingLink(){
   const lnk=document.getElementById('drawing-link');
   const u=metaState.drawingUrl||'';
   if(lnk){if(u){lnk.href=u;lnk.classList.remove('disabled');}else{lnk.removeAttribute('href');lnk.classList.add('disabled');}}
+}
+function multiGetVals(key){
+  const wrap=document.getElementById('multi-'+key);
+  if(!wrap) return [];
+  return Array.from(wrap.querySelectorAll('input[type=number]')).map(i=>i.value.trim());
+}
+function multiSync(key){
+  const vals=multiGetVals(key).filter(v=>v!=='');
+  state[key]=vals.join(', ');
+  saveState();updateProgress();
+}
+function multiUpdate(key,el,idx){ multiSync(key); }
+function multiAdd(key){
+  const wrap=document.getElementById('multi-'+key);
+  if(!wrap) return;
+  const btn=wrap.querySelector('.btn-multi-add');
+  const idx=wrap.querySelectorAll('.multi-row').length;
+  const row=document.createElement('div');
+  row.className='multi-row';
+  row.innerHTML=`<input type="number" placeholder="" oninput="multiUpdate('${key}',this,${idx})"><button class="btn-multi btn-multi-del" onclick="multiDel('${key}',${idx})">❌</button>`;
+  wrap.insertBefore(row,btn);
+}
+function multiDel(key,idx){
+  const wrap=document.getElementById('multi-'+key);
+  if(!wrap) return;
+  const rows=wrap.querySelectorAll('.multi-row');
+  if(rows.length<=1) return;
+  rows[idx].remove();
+  multiSync(key);
 }
 function switchTab(id){
   // Normalize: section IDs are numbers; dashboard/checklist are strings
