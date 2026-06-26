@@ -350,7 +350,7 @@ const META_KEYS = ['andpadId','createdDate','lastEditor','finalChecker','estimat
 // STATE
 // ============================================================
 let state = {};
-let metaState = {createdDate:'',lastEditor:'',finalChecker:'',estimateEditor:'',progress:'記入中',ver:'Ver.1.0'};
+let metaState = {createdDate:'',lastEditor:'',progress:'記入中',memo:''};
 let currentTab = 'dashboard';
 const STORE_KEY = 'pv_info_sheet_v1';
 const META_KEY  = 'pv_info_meta_v1';
@@ -503,15 +503,13 @@ function dashboardHtml(){
       <h3>📋 案件メタ情報</h3>
       <div class="meta-grid">
         <div class="meta-item"><label>作成日</label><input type="date" value="${metaState.createdDate||''}" oninput="handleMeta('createdDate',this.value)"></div>
-        <div class="meta-item"><label>版</label><input type="text" value="${esc(metaState.ver||'')}" placeholder="Ver.1.0" oninput="handleMeta('ver',this.value)"></div>
         <div class="meta-item"><label>記入者</label><input type="text" value="${esc(metaState.lastEditor||'')}" placeholder="担当者名" oninput="handleMeta('lastEditor',this.value)"></div>
-        <div class="meta-item"><label>最終確認者</label><input type="text" value="${esc(metaState.finalChecker||'')}" placeholder="確認者名" oninput="handleMeta('finalChecker',this.value)"></div>
-        <div class="meta-item"><label>見積書作成者</label><input type="text" value="${esc(metaState.estimateEditor||'')}" placeholder="見積担当者名" oninput="handleMeta('estimateEditor',this.value)"></div>
         <div class="meta-item"><label>進捗</label>
           <select oninput="handleMeta('progress',this.value)">
             ${['記入中','確認待ち','確認済み','見積中','完了'].map(o=>`<option${metaState.progress===o?' selected':''}>${o}</option>`).join('')}
           </select>
         </div>
+        <div class="meta-item" style="grid-column:1/-1"><label>伝達事項</label><textarea rows="4" placeholder="設計・施工チームへの伝達事項を記入" oninput="handleMeta('memo',this.value)">${esc(metaState.memo||'')}</textarea></div>
       </div>
     </div>
     <div class="dash-card">
@@ -723,7 +721,7 @@ function confirmClear(){
     </div>`;
 }
 function doClear(){
-  state={};metaState={createdDate:'',lastEditor:'',finalChecker:'',estimateEditor:'',progress:'記入中',ver:'Ver.1.0'};
+  state={};metaState={createdDate:'',lastEditor:'',progress:'記入中',memo:''};
   saveState();closeModal();renderApp();updateProgress();
 }
 
@@ -766,8 +764,7 @@ function buildSpreadsheetPayload(){
   headers.push('ANDPADシステムID');
   values.push(getVal('andpadId')||'');
   const metaMap = {
-    createdDate:'作成日', ver:'版', lastEditor:'記入者',
-    finalChecker:'最終確認者', estimateEditor:'見積書作成者', progress:'進捗'
+    createdDate:'作成日', lastEditor:'記入者', progress:'進捗', memo:'伝達事項'
   };
   Object.keys(metaMap).forEach(k=>{
     headers.push(metaMap[k]);
