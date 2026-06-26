@@ -618,7 +618,7 @@ function renderApp(){
       <span class="hdr-facility" id="header-facility">${esc(getVal('facilityName')||'案件名未入力')}</span>
       <span class="hdr-save" id="save-ts">未保存</span>
       <div class="hdr-btns print-hide">
-        <button class="btn btn-wh" onclick="showImport()">📂 読込</button>
+        <button class="btn btn-wh" id="btn-load" onclick="loadFromGAS()">📂 読込</button>
         <button class="btn btn-green" onclick="doExport()">💾 エクスポート</button>
         <button class="btn btn-sheet" id="btn-sheet" onclick="sendToGAS()">📊 スプレッドシートに送信</button>
         <button class="btn btn-wh" onclick="window.print()">🖨 印刷</button>
@@ -726,43 +726,53 @@ function doExport(){
   a.href=url;a.download=`${andpad}-${facility}.json`;a.click();
   URL.revokeObjectURL(url);
 }
-function showImport(){
-  document.getElementById('modal-root').innerHTML=`
-    <div class="modal-backdrop" onclick="if(event.target===this)closeModal()">
-      <div class="modal">
-        <h3>📂 JSONファイルを読み込む</h3>
-        <p>GitHubからダウンロードしたJSONファイルを選択するか、<br>JSONテキストを直接貼り付けてください。</p>
-        <div><input type="file" id="import-file" accept=".json" onchange="handleFileSelect(this)"></div>
-        <textarea id="import-json" placeholder='{"_meta":{...},"data":{...}}'></textarea>
-        <div class="modal-btns">
-          <button class="btn btn-outline" onclick="closeModal()">キャンセル</button>
-          <button class="btn btn-green" onclick="doImport()">読み込む</button>
-        </div>
-      </div>
-    </div>`;
+function loadFromGAS(){
+  const btn=document.getElementById('btn-load');
+  const id=extractAndpadId(getVal('andpadId'));
+  if(!id){
+    showToast('ANDPADシステムIDを入力してから読込してください',false);
+    return;
+  }
+  if(btn){btn.disabled=true;btn.textContent='📂 読込中…';}
+  fetch(GAS_URL,{
+    method:'POST',
+    redirect:'follow',
+    headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify({action:'load',andpadId:id})
+  }).then(r=>{
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  }).then(res=>{
+    if(res.status!=='success') throw new Error(res.message||'データが見つかりません');
+    restoreFromSheet(res.data);
+    showToast('スプレッドシートからデータを復元しました',true);
+  }).catch(err=>{
+    showToast('読込失敗: '+err.message,false);
+  }).finally(()=>{
+    if(btn){btn.disabled=false;btn.textContent='📂 読込';}
+  });
 }
-function handleFileSelect(input){
-  const file=input.files[0];if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{document.getElementById('import-json').value=e.target.result;};
-  reader.readAsText(file);
-}
-function doImport(){
-  try{
-    const raw=document.getElementById('import-json').value;
-    const parsed=JSON.parse(raw);
-    if(parsed.data){
-      state={...parsed.data};
-      if(parsed._meta) metaState={...metaState,...parsed._meta};
-    } else {
-      state={...parsed};
-    }
-    saveState();
-    closeModal();
-    renderApp();
-    updateProgress();
-    alert('✅ データを読み込みました。');
-  }catch(e){alert('❌ 読み込みエラー: JSONが正しくありません。\n'+e.message);}
+function restoreFromSheet(data){
+  const metaLabelMap={
+    '作成日':'createdDate','記入者':'lastEditor','進捗':'progress',
+    '伝達事項':'memo','図面格納先URL':'drawingUrl'
+  };
+  const fieldLabelMap={};
+  SEC.forEach(s=>s.subs.forEach(sub=>sub.fields.forEach(f=>{
+    const label='No.'+(f.no==='*'?'-':f.no)+' '+f.lbl;
+    fieldLabelMap[label]=f;
+  })));
+  Object.keys(data).forEach(label=>{
+    const val=data[label]!=null?String(data[label]):'';
+    if(label==='ANDPADシステムID'){state['andpadId']=val;return;}
+    if(label==='ANDPADのURL'){state['andpadUrl']=val;return;}
+    if(metaLabelMap[label]){metaState[metaLabelMap[label]]=val;return;}
+    const f=fieldLabelMap[label];
+    if(f) state[f.key]=val;
+  });
+  saveState();
+  renderApp();
+  updateProgress();
 }
 function closeModal(){document.getElementById('modal-root').innerHTML='';}
 function confirmClear(){
