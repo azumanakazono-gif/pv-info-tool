@@ -128,17 +128,30 @@ select{-webkit-appearance:auto}
 @media print{
   header,nav,.navbar,button,.btn,.no-print,[role="navigation"]{display:none!important}
   .hdr .hdr-btns,.tabs,.print-hide{display:none!important}
-  .hdr{position:fixed;top:0;left:0;right:0;z-index:9999;padding:6px 16px;box-shadow:none;border-bottom:1px solid #ccc}
+  .hdr{position:fixed;top:0;left:0;right:0;z-index:9999;padding:4px 16px;box-shadow:none;border-bottom:1px solid #ccc}
   .hdr-save{display:none!important}
-  body{background:#fff!important;color:#000!important;font-size:12pt;line-height:1.5;margin:0;padding:0}
-  .main{padding-top:50px!important}
+  body{background:#fff!important;color:#000!important;font-size:10pt;line-height:1.3;margin:0;padding:0}
+  .main{padding-top:40px!important;padding-left:4px!important;padding-right:4px!important}
   .container,.main-content,.dashboard-wrapper,.main{width:100%!important;max-width:100%!important;margin:0!important;box-shadow:none!important}
   .row,.grid,.dash-grid{display:block!important}
-  .card,.panel{page-break-inside:avoid;break-inside:avoid;border:1px solid #ccc!important;margin-bottom:15px!important;box-shadow:none!important}
+  .dash-grid{gap:6px!important;margin-bottom:8px!important}
+  .dash-card{break-inside:avoid;box-shadow:none!important;border:1px solid #ccc!important;margin-bottom:6px!important;padding:8px!important}
+  .dash-card h3{margin-bottom:4px!important;font-size:9pt!important}
+  .total-gauge{padding:6px 0!important}
+  .gauge-num{font-size:28px!important}
+  .gauge-bar{margin-top:6px!important}
+  .meta-grid{gap:4px!important}
+  .card,.panel{page-break-inside:avoid;break-inside:avoid;border:1px solid #ccc!important;margin-bottom:8px!important;box-shadow:none!important}
   .panel{display:block!important;break-before:page}
   .panel:first-of-type{break-before:auto}
-  .sub-card{break-inside:avoid;box-shadow:none!important;border:1px solid #ccc!important}
-  .dash-card{break-inside:avoid;box-shadow:none!important;border:1px solid #ccc!important;margin-bottom:15px!important}
+  .sub-card{break-inside:avoid;box-shadow:none!important;border:1px solid #ccc!important;margin-bottom:8px!important}
+  .sub-hd{padding:4px 10px!important;font-size:9pt!important}
+  .frow{min-height:28px!important}
+  .flbl{padding:3px 6px 3px 4px!important;font-size:10px!important}
+  .finp{padding:2px 4px!important}
+  .finp input,.finp select,.finp textarea{font-size:10px!important;padding:2px 4px!important}
+  .funit{padding:2px 4px!important;font-size:9px!important}
+  .chk-section{margin-bottom:8px!important}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 }
 
