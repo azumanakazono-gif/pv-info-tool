@@ -128,8 +128,11 @@ select{-webkit-appearance:auto}
 @media print{
   header,nav,.navbar,button,.btn,.no-print,[role="navigation"]{display:none!important}
   .hdr .hdr-btns,.tabs,.print-hide{display:none!important}
+  .hdr{position:fixed;top:0;left:0;right:0;z-index:9999;padding:6px 16px;box-shadow:none;border-bottom:1px solid #ccc}
+  .hdr-save{display:none!important}
   body{background:#fff!important;color:#000!important;font-size:12pt;line-height:1.5;margin:0;padding:0}
-  .container,.main-content,.dashboard-wrapper,.main{width:100%!important;max-width:100%!important;margin:0!important;padding:0!important;box-shadow:none!important}
+  .main{padding-top:50px!important}
+  .container,.main-content,.dashboard-wrapper,.main{width:100%!important;max-width:100%!important;margin:0!important;box-shadow:none!important}
   .row,.grid,.dash-grid{display:block!important}
   .card,.panel{page-break-inside:avoid;break-inside:avoid;border:1px solid #ccc!important;margin-bottom:15px!important;box-shadow:none!important}
   .panel{display:block!important;break-before:page}
