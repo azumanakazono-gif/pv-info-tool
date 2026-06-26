@@ -354,7 +354,7 @@ const META_KEYS = ['andpadId','createdDate','lastEditor','finalChecker','estimat
 // STATE
 // ============================================================
 let state = {};
-let metaState = {createdDate:'',lastEditor:'',progress:'記入中',memo:''};
+let metaState = {createdDate:'',lastEditor:'',progress:'記入中',memo:'',drawingUrl:''};
 let currentTab = 'dashboard';
 const STORE_KEY = 'pv_info_sheet_v1';
 const META_KEY  = 'pv_info_meta_v1';
@@ -515,6 +515,7 @@ function dashboardHtml(){
           </select>
         </div>
         <div class="meta-item" style="grid-column:1/-1"><label>伝達事項</label><textarea rows="4" placeholder="設計・施工チームへの伝達事項を記入" oninput="handleMeta('memo',this.value)">${esc(metaState.memo||'')}</textarea></div>
+        <div class="meta-item" style="grid-column:1/-1"><label>図面格納先URL</label><div style="display:flex;gap:6px;align-items:center"><input type="url" id="drawingUrl-input" value="${esc(metaState.drawingUrl||'')}" placeholder="https://drive.google.com/..." oninput="handleMeta('drawingUrl',this.value);updateDrawingLink()"><a class="btn-link${metaState.drawingUrl?'':' disabled'}" id="drawing-link" ${metaState.drawingUrl?'href="'+esc(metaState.drawingUrl)+'"':''} target="_blank" rel="noopener noreferrer" onclick="var u=metaState.drawingUrl;if(!u){event.preventDefault();return;}window.open(u,'_blank');event.preventDefault();">🔗 リンクを開く</a></div></div>
       </div>
     </div>
     <div class="dash-card">
@@ -642,6 +643,11 @@ function handleMeta(key,val){
   metaState[key]=val;
   saveState();
   if(key==='facilityName') updateHeader();
+}
+function updateDrawingLink(){
+  const lnk=document.getElementById('drawing-link');
+  const u=metaState.drawingUrl||'';
+  if(lnk){if(u){lnk.href=u;lnk.classList.remove('disabled');}else{lnk.removeAttribute('href');lnk.classList.add('disabled');}}
 }
 function switchTab(id){
   // Normalize: section IDs are numbers; dashboard/checklist are strings
@@ -780,6 +786,8 @@ function buildSpreadsheetPayload(){
   values.push(metaState.lastEditor||'');
   headers.push('伝達事項');
   values.push(metaState.memo||'');
+  headers.push('図面格納先URL');
+  values.push(metaState.drawingUrl||'');
   headers.push('進捗');
   values.push(metaState.progress||'');
   SEC.forEach(sec=>{
