@@ -70,6 +70,8 @@ body{font-family:"Hiragino Sans","Yu Gothic UI",system-ui,sans-serif;font-size:1
 .btn-link{margin-left:6px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--c1);border:1px solid var(--c1);border-radius:4px;text-decoration:none;white-space:nowrap;cursor:pointer;flex-shrink:0}
 .btn-link:hover{background:var(--c1p)}
 .btn-link.disabled{opacity:.35;pointer-events:none;cursor:default}
+.drawing-url-input{font-size:14px!important;font-weight:700;padding:6px 10px!important;border:2px solid #bbb!important;border-radius:5px;background:#fffde7!important;flex:1}
+.btn-link-drawing{font-size:13px!important;padding:6px 14px!important;border-width:2px!important}
 .multi-wrap{display:flex;flex-direction:column;gap:4px;width:100%}
 .multi-row{display:flex;align-items:center;gap:4px}
 .multi-row input{flex:1}
@@ -161,6 +163,8 @@ select{-webkit-appearance:auto}
   .chk-section{break-inside:avoid!important;margin-bottom:6px!important}
   .chk-section h3{break-after:avoid!important;page-break-after:avoid!important;font-size:11pt!important;line-height:1.6!important}
   .chk-section label{font-size:11pt!important;line-height:1.6!important}
+  .drawing-url-input{font-size:14pt!important;font-weight:700!important;padding:4px 8px!important;border:2px solid #999!important;background:#fffde7!important;border-radius:4px!important}
+  .btn-link-drawing{display:inline-block!important;font-size:12pt!important;padding:4px 12px!important;border:2px solid var(--c1)!important;font-weight:700!important}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 }
 
@@ -561,7 +565,7 @@ function dashboardHtml(){
           </select>
         </div>
         <div class="meta-item" style="grid-column:1/-1"><label>伝達事項</label><textarea rows="4" placeholder="ここに双方の伝達事項を記入" oninput="handleMeta('memo',this.value)">${esc(metaState.memo||'')}</textarea></div>
-        <div class="meta-item" style="grid-column:1/-1"><label>図面格納先URL</label><div style="display:flex;gap:6px;align-items:center"><input type="url" id="drawingUrl-input" value="${esc(metaState.drawingUrl||'')}" placeholder="https://drive.google.com/..." oninput="handleMeta('drawingUrl',this.value);updateDrawingLink()"><a class="btn-link${metaState.drawingUrl?'':' disabled'}" id="drawing-link" ${metaState.drawingUrl?'href="'+esc(metaState.drawingUrl)+'"':''} target="_blank" rel="noopener noreferrer" onclick="var u=metaState.drawingUrl;if(!u){event.preventDefault();return;}window.open(u,'_blank');event.preventDefault();">🔗 リンクを開く</a></div></div>
+        <div class="meta-item drawing-url-wrap" style="grid-column:1/-1"><label>図面格納先URL</label><div style="display:flex;gap:8px;align-items:center"><input class="drawing-url-input" type="url" id="drawingUrl-input" value="${esc(metaState.drawingUrl||'')}" placeholder="https://drive.google.com/..." oninput="handleMeta('drawingUrl',this.value);updateDrawingLink()"><a class="btn-link btn-link-drawing${metaState.drawingUrl?'':' disabled'}" id="drawing-link" ${metaState.drawingUrl?'href="'+esc(metaState.drawingUrl)+'"':''} target="_blank" rel="noopener noreferrer" onclick="var u=metaState.drawingUrl;if(!u){event.preventDefault();return;}window.open(u,'_blank');event.preventDefault();">🔗 リンクを開く</a></div></div>
       </div>
     </div>
     <div class="dash-card">
