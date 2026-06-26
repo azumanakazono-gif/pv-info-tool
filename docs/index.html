@@ -762,14 +762,17 @@ function buildSpreadsheetPayload(){
   headers.push('送信日時');
   values.push(new Date().toLocaleString('ja-JP'));
   headers.push('ANDPADシステムID');
+  values.push(extractAndpadId(getVal('andpadId'))||'');
+  headers.push('ANDPADのURL');
   values.push(getVal('andpadId')||'');
-  const metaMap = {
-    createdDate:'作成日', lastEditor:'記入者', progress:'進捗', memo:'伝達事項'
-  };
-  Object.keys(metaMap).forEach(k=>{
-    headers.push(metaMap[k]);
-    values.push(metaState[k]||'');
-  });
+  headers.push('作成日');
+  values.push(metaState.createdDate||'');
+  headers.push('記入者');
+  values.push(metaState.lastEditor||'');
+  headers.push('伝達事項');
+  values.push(metaState.memo||'');
+  headers.push('進捗');
+  values.push(metaState.progress||'');
   SEC.forEach(sec=>{
     sec.subs.forEach(sub=>{
       sub.fields.forEach(f=>{
@@ -783,7 +786,7 @@ function buildSpreadsheetPayload(){
   return {
     headers: headers,
     values: values,
-    andpadId: getVal('andpadId')||'',
+    andpadId: extractAndpadId(getVal('andpadId'))||'',
     facilityName: getVal('facilityName')||''
   };
 }
