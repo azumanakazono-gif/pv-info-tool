@@ -154,6 +154,7 @@ select{-webkit-appearance:auto}
   .freq{font-size:10pt!important;padding:2px!important;width:16px!important}
   #panel-2 .sub-card{page-break-after:auto!important;break-after:auto!important}
   .sec-heading{break-after:avoid!important;page-break-after:avoid!important}
+  #sub-4-6{break-before:page!important;padding-top:24px!important}
   #panel-checklist{break-before:page!important;break-inside:avoid!important;padding-top:24px!important}
   #panel-checklist .dash-card>h3{break-after:avoid!important;page-break-after:avoid!important}
   .chk-section{break-inside:avoid!important;margin-bottom:6px!important}
@@ -502,7 +503,7 @@ function subHtml(sub,secColor){
   const req=fields.filter(f=>f.req);
   const filled=req.filter(f=>getVal(f.key)!=='');
   const pct=req.length?Math.round(filled.length/req.length*100):100;
-  return `<div class="sub-card">
+  return `<div class="sub-card" id="sub-${sub.id}">
     <div class="sub-hd" style="background:${secColor}">
       <span>▸ ${esc(sub.id)}　${esc(sub.title)}</span>
       <span class="sub-hd-pct">${filled.length}/${req.length}必須  ${pct}%</span>
