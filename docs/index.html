@@ -217,7 +217,8 @@ const SEC = [
       {no:35,key:'receptionVoltage',lbl:'受電電圧',req:true,type:'n',unit:'V',hint:'100/200（低圧）/ 6600（高圧）'},
       {no:36,key:'contractPower',lbl:'契約電力',req:true,type:'n',unit:'kW',hint:'電力会社との契約上の最大需要電力'},
       {no:37,key:'receptionPoint',lbl:'受電点（引込柱／キュービクル位置）',req:true,type:'t',hint:'PV接続点との物理距離・配線ルートに必要'},
-      {no:38,key:'transformerCap',lbl:'既設変圧器（主変圧器）容量',req:true,type:'t',unit:'kVA',hint:'PVと既存負荷の容量バランス確認に必須'},
+      {no:38,key:'transformerCapSingle',lbl:'既設変圧器（主変圧器）容量（単相）',req:true,type:'n',unit:'kVA',hint:'単相変圧器の容量'},
+      {no:38,key:'transformerCapThree',lbl:'既設変圧器（主変圧器）容量（三相）',req:true,type:'n',unit:'kVA',hint:'三相変圧器の容量'},
       {no:39,key:'transformerLoad',lbl:'変圧器の負荷率（実績）',req:false,type:'n',unit:'%',hint:'70%以上は変圧器更新も検討'},
     ]},
     {id:'3-2',title:'需要・使用量実績',fields:[
@@ -547,7 +548,7 @@ function checklistHtml(){
   const checks=[
     {title:'①基本情報',keys:['facilityName','address','buildingUse','buildingAge','clientContact','clientPhone','techContact','utilityCompany','contractType','electricRate']},
     {title:'②屋根・設置条件',keys:['roofShape','roofMaterial','mountingFrame','roofFaces','roofTotalArea','pvEffArea','azimuth','roofSlope','roofObstacles','shadowSources','snowDepth','windSpeed','roughnessClass','buildingHeight','structuralCalc','allowableLoad']},
-    {title:'③電気条件',keys:['poleNum','receptionMethod','receptionVoltage','contractPower','receptionPoint','transformerCap','maxDemand','avgDemand','annualUsage','data30min','operatingPattern','connectionPoint','simpleStudy','gridConsult','appStatus','singleLineDiag']},
+    {title:'③電気条件',keys:['poleNum','receptionMethod','receptionVoltage','contractPower','receptionPoint','transformerCapSingle','transformerCapThree','maxDemand','avgDemand','annualUsage','data30min','operatingPattern','connectionPoint','simpleStudy','gridConsult','appStatus','singleLineDiag']},
     {title:'④太陽光設備条件（重要）',keys:['pvCapacity','panelSpec','panelCount','pcsPhase','pcsModel','pcsConfig','pcsRatedOutput','pcsLocation','monitorDevice','monitorAccessory','smartMeter','reverseFlow','rprRequired','protectRelay','zpd','selfConsumTarget','batteryPresent','standAlone','specificLoad']},
     {title:'⑤施工条件',keys:['accessRoad','largeVehicle','cranePlan','scaffolding','workHours','localContractor','accommodation','saltDamage','heavySnow']},
     {title:'⑥リスク・制約',keys:['structuralIssues','zoningUse','elecActNotice','scheduleConstraint','budget','approvalStatus']},
