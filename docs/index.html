@@ -839,7 +839,12 @@ function buildSpreadsheetPayload(){
         if(f.key==='andpadId'||f.key==='andpadUrl') return;
         const label = 'No.'+(f.no==='*'?'-':f.no)+' '+f.lbl;
         headers.push(label);
-        values.push(getVal(f.key));
+        if(f.type==='multi'){
+          const live=multiGetVals(f.key).filter(v=>v!=='');
+          values.push(live.length?live.join(', '):(getVal(f.key)||''));
+        } else {
+          values.push(getVal(f.key));
+        }
       });
     });
   });
