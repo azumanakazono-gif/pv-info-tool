@@ -496,7 +496,8 @@ function fieldHtml(f){
     inputHtml=`<textarea class="${filled?'ok':''}" data-key="${f.key}" placeholder="${esc(f.hint||'')}" oninput="handleChange(this)">${esc(val)}</textarea>`;
   } else {
     const itype=f.type==='n'?'number':'text';
-    inputHtml=`<input type="${itype}" class="${filled?'ok':''}" data-key="${f.key}" value="${esc(val)}" placeholder="${esc(f.hint||'')}" oninput="handleChange(this)">`;
+    const ro=f.key==='andpadId'?' readonly style="background:#f3f4f6;cursor:not-allowed"':'';
+    inputHtml=`<input type="${itype}" class="${filled?'ok':''}" data-key="${f.key}" value="${esc(val)}" placeholder="${esc(f.hint||'')}" oninput="handleChange(this)"${ro}>`;
   }
   const reqEmpty=f.req&&!filled;
   const linkBtn=f.key==='andpadUrl'?`<a class="btn-link${filled?'':' disabled'}" id="andpad-link" ${filled?'href="'+esc(val)+'"':''} target="_blank" rel="noopener noreferrer" onclick="if(!getVal('andpadUrl')){event.preventDefault();return;}window.open(getVal('andpadUrl'),'_blank');event.preventDefault();">🔗 リンクを開く</a>`:'';
@@ -562,6 +563,7 @@ function dashboardHtml(){
     <div class="dash-card">
       <h3>📋 案件メタ情報</h3>
       <div class="meta-grid">
+        <div class="meta-item" style="grid-column:1/-1"><label>ANDPADシステムID</label><input type="text" id="dash-andpadId" value="${esc(getVal('andpadId'))}" placeholder="ANDPADのシステムID（数値）" oninput="syncAndpadId(this.value)"></div>
         <div class="meta-item"><label>作成日</label><input type="date" value="${metaState.createdDate||''}" oninput="handleMeta('createdDate',this.value)"></div>
         <div class="meta-item"><label>記入者</label><input type="text" value="${esc(metaState.lastEditor||'')}" placeholder="担当者名" oninput="handleMeta('lastEditor',this.value)"></div>
         <div class="meta-item"><label>進捗</label>
@@ -699,6 +701,12 @@ function handleMeta(key,val){
   metaState[key]=val;
   saveState();
   if(key==='facilityName') updateHeader();
+}
+function syncAndpadId(val){
+  state.andpadId=val;
+  saveState();
+  const el=document.querySelector('[data-key="andpadId"]');
+  if(el){el.value=val;el.classList.toggle('ok',val!=='');}
 }
 function updateDrawingLink(){
   const lnk=document.getElementById('drawing-link');
