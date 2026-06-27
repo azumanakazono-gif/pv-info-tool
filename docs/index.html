@@ -572,7 +572,7 @@ function dashboardHtml(){
           </select>
         </div>
         <div class="meta-item" style="grid-column:1/-1"><label>伝達事項</label><textarea rows="4" placeholder="ここに双方の伝達事項を記入" oninput="handleMeta('memo',this.value)">${esc(metaState.memo||'')}</textarea></div>
-        <div class="meta-item drawing-url-wrap" style="grid-column:1/-1"><label class="lbl-drawing">📁 図面格納先URL</label><div style="display:flex;gap:8px;align-items:center"><input class="drawing-url-input" type="url" id="drawingUrl-input" value="${esc(metaState.drawingUrl||'')}" placeholder="https://drive.google.com/..." oninput="handleMeta('drawingUrl',this.value);updateDrawingLink()"><a class="btn-link btn-link-drawing${metaState.drawingUrl?'':' disabled'}" id="drawing-link" ${metaState.drawingUrl?'href="'+esc(metaState.drawingUrl)+'"':''} target="_blank" rel="noopener noreferrer" onclick="var u=metaState.drawingUrl;if(!u){event.preventDefault();return;}window.open(u,'_blank');event.preventDefault();">🔗 リンクを開く</a></div></div>
+        <div class="meta-item drawing-url-wrap" style="grid-column:1/-1"><label class="lbl-drawing">📁 図面格納先URL</label><div style="display:flex;gap:8px;align-items:center"><input class="drawing-url-input" type="url" id="drawingUrl-input" value="${esc(metaState.drawingUrl||'')}" placeholder="https://drive.google.com/..." oninput="handleMeta('drawingUrl',this.value);updateDrawingLink()"><a class="btn-link btn-link-drawing${metaState.drawingUrl?'':' disabled'}" id="drawing-link" href="${esc(metaState.drawingUrl||'#')}" target="_blank" rel="noopener noreferrer" onclick="if(!metaState.drawingUrl){event.preventDefault();}">🔗 リンクを開く</a></div></div>
       </div>
     </div>
     <div class="dash-card">
