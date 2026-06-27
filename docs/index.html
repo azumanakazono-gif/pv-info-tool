@@ -889,10 +889,10 @@ function buildSpreadsheetPayload(){
   values.push(metaState.lastEditor||'');
   headers.push('伝達事項');
   values.push(metaState.memo||'');
-  headers.push('図面格納先URL');
-  values.push(metaState.drawingUrl||'');
   headers.push('進捗');
   values.push(metaState.progress||'');
+  headers.push('図面格納先URL');
+  values.push(metaState.drawingUrl||'');
   SEC.forEach(sec=>{
     sec.subs.forEach(sub=>{
       sub.fields.forEach(f=>{
