@@ -877,38 +877,49 @@ function showToast(msg, ok){
 // GAS スプレッドシート送信
 // ============================================================
 function buildSpreadsheetPayload() {
-  const headers = [];
-  const values = [];
-
-  headers.push('送信日時', 'ANDPADシステムID', 'ANDPADのURL', '作成日', '記入者', '伝達事項', '進捗', '図面格納先URL');
-  values.push(
-    new Date().toLocaleString('ja-JP'),
-    extractAndpadId(getVal('andpadId')) || '',
-    getVal('andpadUrl') || '',
-    metaState.createdDate || '',
-    metaState.lastEditor || '',
-    metaState.memo || '',
-    metaState.progress || '記入中',
-    metaState.drawingUrl || ''
-  );
-
-  SEC.forEach(sec => {
-    sec.subs.forEach(sub => {
-      sub.fields.forEach(f => {
-        if (f.key === 'andpadId' || f.key === 'andpadUrl') return;
-        const label = 'No.' + (f.no === '*' ? '-' : f.no) + ' ' + f.lbl;
-        headers.push(label);
-        if (f.type === 'multi') {
-          const live = multiGetVals(f.key).filter(v => v !== '');
-          values.push(live.length ? live.join(', ') : (getVal(f.key) || ''));
-        } else {
-          values.push(getVal(f.key) || '');
-        }
-      });
-    });
-  });
-
-  return { headers, values };
+  const payload = {
+    'andpadid': getVal('andpadId'),
+    'ANDPAD案件URL': getVal('andpadUrl'),
+    'ANDPAD案件名': getVal('facilityName'),
+    '所在地（住所）': getVal('address'),
+    '顧客名': getVal('clientName'),
+    '担当者名': getVal('assignedPerson'),
+    '図面格納先URL': getVal('drawingUrl'),
+    '連系予定日': getVal('gridConnectionDate'),
+    '電力会社': getVal('powerCompany'),
+    '電力営業所': getVal('powerOffice'),
+    '電力顧客番号': getVal('powerCustomerNumber'),
+    '電力契約名義': getVal('powerContractName'),
+    '供給地点特定番号': getVal('supplyPointNumber'),
+    '既存契約プラン': getVal('existingPlan'),
+    '新契約プラン': getVal('newPlan'),
+    '契約容量(a)': getVal('contractAmperage'),
+    '契約容量(kva/kw)': getVal('contractKva'),
+    '契約番号': getVal('contractNumber'),
+    '単線結線図': getVal('singleLineDiagram'),
+    '引込位置等指示図': getVal('dropPositionDiagram'),
+    '配置図': getVal('layoutDiagram'),
+    '平面図・立面図': getVal('floorPlan'),
+    '屋根伏図': getVal('roofPlan'),
+    '構造計算書': getVal('structuralCalculation'),
+    'その他添付書類': getVal('otherDocuments'),
+    '太陽光メーカー-第一希望': document.getElementById('panelManufacturer_1')?.value || getVal('panelManufacturer1'),
+    '太陽光メーカー-第二希望': document.getElementById('panelManufacturer_2')?.value || getVal('panelManufacturer2'),
+    '蓄電池メーカー-第一希望': document.getElementById('storageManufacturer_1')?.value || getVal('storageManufacturer1'),
+    '蓄電池メーカー-第二希望': document.getElementById('storageManufacturer_2')?.value || getVal('storageManufacturer2'),
+    'パワコン設置希望場所': getVal('pcsLocation'),
+    '蓄電池設置希望場所': getVal('storageLocation'),
+    '施工制約': getVal('constructionConstraints'),
+    '搬入経路': getVal('deliveryRoute'),
+    '重機スペース': getVal('heavyEquipmentSpace'),
+    '足場必要性': getVal('scaffoldRequired'),
+    '塩害地域': getVal('saltDamage'),
+    '積雪地域': getVal('snowRegion'),
+    '基準風速': getVal('referenceWindSpeed'),
+    '地表面粗度区分': getVal('roughnessCategory'),
+    'その他特記事項': getVal('otherRemarks')
+  };
+  return payload;
 }
 
 function sendToGAS(){
