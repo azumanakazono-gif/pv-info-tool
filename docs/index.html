@@ -877,35 +877,164 @@ function showToast(msg, ok){
 // GAS スプレッドシート送信
 // ============================================================
 function buildSpreadsheetPayload() {
-  const headers = [];
-  const values = [];
+  const g = k => getVal(k) || '';
+  const mg = k => { const v = multiGetVals(k).filter(x => x !== ''); return v.length ? v.join(', ') : g(k); };
 
-  headers.push('送信日時', 'ANDPADシステムID', 'ANDPADのURL', '作成日', '記入者', '伝達事項', '進捗', '図面格納先URL');
-  values.push(
-    new Date().toLocaleString('ja-JP'),
-    extractAndpadId(getVal('andpadId')) || '',
-    getVal('andpadUrl') || '',
-    metaState.createdDate || '',
-    metaState.lastEditor || '',
-    metaState.memo || '',
-    metaState.progress || '記入中',
-    metaState.drawingUrl || ''
-  );
+  const meta = [
+    ['送信日時', new Date().toLocaleString('ja-JP')],
+    ['ANDPADシステムID', extractAndpadId(g('andpadId')) || ''],
+    ['ANDPADのURL', g('andpadUrl')],
+    ['作成日', metaState.createdDate || ''],
+    ['記入者', metaState.lastEditor || ''],
+    ['伝達事項', metaState.memo || ''],
+    ['進捗', metaState.progress || '記入中'],
+    ['図面格納先URL', metaState.drawingUrl || ''],
+  ];
 
-  SEC.forEach(sec => {
-    sec.subs.forEach(sub => {
-      sub.fields.forEach(f => {
-        if (f.key === 'andpadId' || f.key === 'andpadUrl') return;
-        const label = 'No.' + (f.no === '*' ? '-' : f.no) + ' ' + f.lbl;
-        headers.push(label);
-        if (f.type === 'multi') {
-          const live = multiGetVals(f.key).filter(v => v !== '');
-          values.push(live.length ? live.join(', ') : (getVal(f.key) || ''));
-        } else {
-          values.push(getVal(f.key) || '');
-        }
-      });
-    });
+  const fields = [
+    /*  1*/ ['facilityName'],
+    /*  2*/ ['address'],
+    /*  3*/ ['latLng'],
+    /*  4*/ ['buildingUse'],
+    /*  5*/ ['buildingAge'],
+    /*  6*/ ['startTarget'],
+    /*  7*/ ['clientContact'],
+    /*  8*/ ['clientPhone'],
+    /*  9*/ ['techContact'],
+    /* 10*/ ['projectMgr'],
+    /* 11*/ ['gridOperator'],
+    /* 12*/ ['utilityCompany'],
+    /* 13*/ ['contractType'],
+    /* 14*/ ['maxDemandPower'],
+    /* 15*/ ['electricRate'],
+    /* 16*/ ['roofShape'],
+    /* 17*/ ['roofMaterial'],
+    /* 18*/ ['mountingFrame'],
+    /* 19*/ ['roofFaces'],
+    /* 20*/ ['roofTotalArea'],
+    /* 21*/ ['pvEffArea'],
+    /* 22*/ ['azimuth'],
+    /* 23*/ ['roofSlope'],
+    /* 24*/ ['roofObstacles'],
+    /* 25*/ ['shadowSources'],
+    /* 26*/ ['edgeClearance'],
+    /* 27*/ ['snowDepth'],
+    /* 28*/ ['windSpeed'],
+    /* 29*/ ['roughnessClass'],
+    /* 30*/ ['buildingHeight'],
+    /* 31*/ ['importanceFactor'],
+    /* 32*/ ['structuralCalc'],
+    /* 33*/ ['panelLoadEstimate'],
+    /* 34*/ ['allowableLoad'],
+    /* 35*/ ['poleNum'],
+    /* 36*/ ['receptionMethod'],
+    /* 37*/ ['receptionVoltage'],
+    /* 38*/ ['contractPower'],
+    /* 39*/ ['receptionPoint'],
+    /* 40*/ ['transformerCapSingle', 'multi'],
+    /* 41*/ ['transformerCapThree', 'multi'],
+    /* 42*/ ['transformerLoad'],
+    /* 43*/ ['maxDemand'],
+    /* 44*/ ['avgDemand'],
+    /* 45*/ ['annualUsage'],
+    /* 46*/ ['data30min'],
+    /* 47*/ ['operatingPattern'],
+    /* 48*/ ['seasonalChange'],
+    /* 49*/ ['connectionPoint'],
+    /* 50*/ ['simpleStudy'],
+    /* 51*/ ['gridConsult'],
+    /* 52*/ ['appStatus'],
+    /* 53*/ ['gridWorkCost'],
+    /* 54*/ ['singleLineDiag'],
+    /* 55*/ ['relaySettings'],
+    /* 56*/ ['powerFactor'],
+    /* 57*/ ['harmonics'],
+    /* 58*/ ['pvCapacity'],
+    /* 59*/ ['annualGenTarget'],
+    /* 60*/ ['panelSpec'],
+    /* 61*/ ['panelCount'],
+    /* 62*/ ['pcsPhase'],
+    /* 63*/ ['pcsModel'],
+    /* 64*/ ['pcsConfig'],
+    /* 65*/ ['pcsRatedOutput'],
+    /* 66*/ ['pcsLocation'],
+    /* 67*/ ['monitorDevice'],
+    /* 68*/ ['monitorAccessory'],
+    /* 69*/ ['smartMeter'],
+    /* 70*/ ['reverseFlow'],
+    /* 71*/ ['rprRequired'],
+    /* 72*/ ['protectRelay'],
+    /* 73*/ ['zpd'],
+    /* 74*/ ['selfConsumTarget'],
+    /* 75*/ ['batteryPresent'],
+    /* 76*/ ['batteryCap'],
+    /* 77*/ ['standAlone'],
+    /* 78*/ ['specificLoad'],
+    /* 79*/ ['load1Name'],
+    /* 80*/ ['load1Cap'],
+    /* 81*/ ['load1Phase'],
+    /* 82*/ ['load1Priority'],
+    /* 83*/ ['load2Name'],
+    /* 84*/ ['load2Cap'],
+    /* 85*/ ['load2Phase'],
+    /* 86*/ ['load2Priority'],
+    /* 87*/ ['load3Name'],
+    /* 88*/ ['load3Cap'],
+    /* 89*/ ['load3Phase'],
+    /* 90*/ ['load3Priority'],
+    /* 91*/ ['totalSpecLoad'],
+    /* 92*/ ['subsidyLegalRemarks'],
+    /* 93*/ ['distFromYard'],
+    /* 94*/ ['accessRoad'],
+    /* 95*/ ['largeVehicle'],
+    /* 96*/ ['cranePlan'],
+    /* 97*/ ['accessConstraints'],
+    /* 98*/ ['scaffolding'],
+    /* 99*/ ['workHours'],
+    /*100*/ ['noiseRestrict'],
+    /*101*/ ['utilities'],
+    /*102*/ ['localContractor'],
+    /*103*/ ['accommodation'],
+    /*104*/ ['accommodationInfo'],
+    /*105*/ ['busySeason'],
+    /*106*/ ['saltDamage'],
+    /*107*/ ['heavySnow'],
+    /*108*/ ['workablePeriod'],
+    /*109*/ ['structuralIssues'],
+    /*110*/ ['waterproofWarranty'],
+    /*111*/ ['asbestos'],
+    /*112*/ ['zoningUse'],
+    /*113*/ ['heightFireZone'],
+    /*114*/ ['landscapeOrd'],
+    /*115*/ ['elecActNotice'],
+    /*116*/ ['buildingPermit'],
+    /*117*/ ['scheduleConstraint'],
+    /*118*/ ['constructionPeriod'],
+    /*119*/ ['budget'],
+    /*120*/ ['paybackYears'],
+    /*121*/ ['targetIrr'],
+    /*122*/ ['subsidy'],
+    /*123*/ ['neighborImpact'],
+    /*124*/ ['futurePlan'],
+    /*125*/ ['approvalStatus'],
+    /*126*/ ['competitorStatus'],
+    /*127*/ ['otherNotes'],
+  ];
+
+  const fieldMap = {};
+  SEC.forEach(sec => sec.subs.forEach(sub => sub.fields.forEach(f => { fieldMap[f.key] = f; })));
+  const fLabel = (key, idx) => {
+    const f = fieldMap[key];
+    const no = f ? (f.no === '*' ? '-' : f.no) : (idx + 1);
+    const lbl = f ? f.lbl : key;
+    return 'No.' + no + ' ' + lbl;
+  };
+
+  const headers = meta.map(m => m[0]);
+  const values = meta.map(m => m[1]);
+  fields.forEach(([key, type], i) => {
+    headers.push(fLabel(key, i));
+    values.push(type === 'multi' ? mg(key) : g(key));
   });
 
   return { headers, values };
