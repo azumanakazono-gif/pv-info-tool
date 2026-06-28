@@ -877,6 +877,21 @@ function showToast(msg, ok){
 // GAS スプレッドシート送信
 // ============================================================
 function buildSpreadsheetPayload() {
+  // Sync DOM → state for all data-key elements before reading
+  document.querySelectorAll('[data-key]').forEach(el => {
+    const k = el.dataset.key;
+    const v = el.value;
+    if (v !== undefined && v !== '') state[k] = v;
+  });
+  // Sync multi-input rows
+  document.querySelectorAll('.multi-row input').forEach(el => {
+    const row = el.closest('[data-key]') || el.closest('.multi-wrap');
+    if (row) {
+      const k = row.dataset ? row.dataset.key : null;
+      if (k && el.value) state[k] = el.value;
+    }
+  });
+
   const g = k => getVal(k) || '';
   const mg = k => { const v = multiGetVals(k).filter(x => x !== ''); return v.length ? v.join(', ') : g(k); };
 
