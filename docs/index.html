@@ -811,13 +811,14 @@ function restoreFromSheet(data){
   };
   const fieldLabelMap={};
   SEC.forEach(s=>s.subs.forEach(sub=>sub.fields.forEach(f=>{
-    const label='No.'+(f.no==='*'?'-':f.no)+' '+f.lbl;
-    fieldLabelMap[label]=f;
+    fieldLabelMap[f.lbl]=f;
+    const legacyLabel='No.'+(f.no==='*'?'-':f.no)+' '+f.lbl;
+    fieldLabelMap[legacyLabel]=f;
   })));
   Object.keys(data).forEach(label=>{
     const val=data[label]!=null?String(data[label]):'';
     if(label==='ANDPADシステムID'){state['andpadId']=val;return;}
-    if(label==='ANDPADのURL'){state['andpadUrl']=val;return;}
+    if(label==='ANDPAD案件URL'||label==='ANDPADのURL'){state['andpadUrl']=val;return;}
     if(metaLabelMap[label]){metaState[metaLabelMap[label]]=val;return;}
     const f=fieldLabelMap[label];
     if(f) state[f.key]=val;
@@ -880,7 +881,7 @@ function buildSpreadsheetPayload() {
   const headers = [];
   const values = [];
 
-  headers.push('送信日時', 'ANDPADシステムID', 'ANDPADのURL', '作成日', '記入者', '伝達事項', '進捗', '図面格納先URL');
+  headers.push('送信日時', 'ANDPADシステムID', 'ANDPAD案件URL', '作成日', '記入者', '伝達事項', '進捗', '図面格納先URL');
   values.push(
     new Date().toLocaleString('ja-JP'),
     extractAndpadId(getVal('andpadId')) || '',
@@ -896,7 +897,7 @@ function buildSpreadsheetPayload() {
     sec.subs.forEach(sub => {
       sub.fields.forEach(f => {
         if (f.key === 'andpadId' || f.key === 'andpadUrl') return;
-        const label = 'No.' + (f.no === '*' ? '-' : f.no) + ' ' + f.lbl;
+        const label = f.lbl;
         headers.push(label);
         if (f.type === 'multi') {
           const live = multiGetVals(f.key).filter(v => v !== '');
