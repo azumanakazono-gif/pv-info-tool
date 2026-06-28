@@ -876,50 +876,51 @@ function showToast(msg, ok){
 // ============================================================
 // GAS スプレッドシート送信
 // ============================================================
-function allFields(){const r=[];SEC.forEach(s=>s.subs.forEach(sub=>sub.fields.forEach(f=>r.push(f))));return r;}
+function allFields(){
+  const r=[];
+  SEC.forEach(s=>s.subs.forEach(sub=>sub.fields.forEach(f=>r.push(f))));
+  return r;
+}
+
 function buildSpreadsheetPayload(){
   const headers = [];
   const values = [];
-  headers.push('送信日時');
-  values.push(new Date().toLocaleString('ja-JP'));
-  headers.push('ANDPADシステムID');
-  values.push(extractAndpadId(getVal('andpadId'))||'');
-  headers.push('ANDPADのURL');
-  values.push(getVal('andpadUrl')||'');
-  headers.push('作成日');
-  values.push(metaState.createdDate||'');
-  headers.push('記入者');
-  values.push(metaState.lastEditor||'');
-  headers.push('伝達事項');
-  values.push(metaState.memo||'');
-  headers.push('進捗');
-  values.push(metaState.progress||'');
-  headers.push('図面格納先URL');
-  values.push(metaState.drawingUrl||'');
-  const earlyKeys=['gridOperator','utilityCompany','contractType','electricRate','maxDemandPower'];
-  earlyKeys.forEach(function(k){
-    var f=allFields().find(function(x){return x.key===k;});
-    if(f){
-      headers.push('No.'+(f.no==='*'?'-':f.no)+' '+f.lbl);
-      values.push(getVal(k));
+
+  headers.push('送信日時');        values.push(new Date().toLocaleString('ja-JP'));
+  headers.push('ANDPADシステムID'); values.push(extractAndpadId(getVal('andpadId'))||'');
+  headers.push('ANDPADのURL');     values.push(getVal('andpadUrl')||'');
+  headers.push('作成日');          values.push(metaState.createdDate||'');
+  headers.push('記入者');          values.push(metaState.lastEditor||'');
+  headers.push('伝達事項');        values.push(metaState.memo||'');
+  headers.push('進捗');            values.push(metaState.progress||'');
+  headers.push('図面格納先URL');    values.push(metaState.drawingUrl||'');
+
+  const earlyKeys = ['gridOperator','utilityCompany','contractType','electricRate','maxDemandPower'];
+  earlyKeys.forEach(k => {
+    const f = allFields().find(x => x.key === k);
+    if (f) {
+      headers.push('No.' + (f.no === '*' ? '-' : f.no) + ' ' + f.lbl);
+      values.push(getVal(f.key));
     }
   });
-  SEC.forEach(function(sec){
-    sec.subs.forEach(function(sub){
-      sub.fields.forEach(function(f){
-        if(f.key==='andpadId'||f.key==='andpadUrl') return;
-        if(earlyKeys.indexOf(f.key)!==-1) return;
-        var label = 'No.'+(f.no==='*'?'-':f.no)+' '+f.lbl;
+
+  SEC.forEach(sec => {
+    sec.subs.forEach(sub => {
+      sub.fields.forEach(f => {
+        if (f.key === 'andpadId' || f.key === 'andpadUrl') return;
+        if (earlyKeys.includes(f.key)) return;
+        const label = 'No.' + (f.no === '*' ? '-' : f.no) + ' ' + f.lbl;
         headers.push(label);
-        if(f.type==='multi'){
-          var live=multiGetVals(f.key).filter(function(v){return v!=='';});
-          values.push(live.length?live.join(', '):(getVal(f.key)||''));
+        if (f.type === 'multi') {
+          const live = multiGetVals(f.key).filter(v => v !== '');
+          values.push(live.length ? live.join(', ') : (getVal(f.key) || ''));
         } else {
           values.push(getVal(f.key));
         }
       });
     });
   });
+
   return {
     headers: headers,
     values: values,
