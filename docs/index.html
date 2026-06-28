@@ -862,7 +862,7 @@ function extractAndpadId(val){
 // ============================================================
 // EXPORT TO GOOGLE SPREADSHEET (via GAS)
 // ============================================================
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbw9GDpwp2voLD5l2fsRriRqwNOOH2FoDEgpJPiuU0INCj8mNiwGa8lI7IrW7QyT4k6E/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz2sL3XgIqnzbX_CU_3AqcAfuI3ELmMSzbV8G_MJQBZwzyAfaukO8VKjjIa_5Lrhhil/exec';
 
 function showToast(msg, ok){
   const el = document.createElement('div');
@@ -877,13 +877,11 @@ function showToast(msg, ok){
 // GAS スプレッドシート送信
 // ============================================================
 function buildSpreadsheetPayload() {
-  // Sync DOM → state for all data-key elements before reading
   document.querySelectorAll('[data-key]').forEach(el => {
     const k = el.dataset.key;
     const v = el.value;
     if (v !== undefined && v !== '') state[k] = v;
   });
-  // Sync multi-input rows
   document.querySelectorAll('.multi-row input').forEach(el => {
     const row = el.closest('[data-key]') || el.closest('.multi-wrap');
     if (row) {
@@ -1043,27 +1041,76 @@ function buildSpreadsheetPayload() {
   return { headers: rows.map(r => r[0]), values: rows.map(r => r[1]) };
 }
 
-function sendToGAS(){
-  const btn = document.getElementById('btn-sheet');
-  if (!btn || btn.disabled) return;
-  btn.disabled = true;
-  btn.textContent = '📊 送信中…';
-  const payload = buildSpreadsheetPayload();
+function sendToGAS() {
+  const btn = document.querySelector('button[onclick="sendToGAS()"]') || document.querySelector('.btn-success');
+  if (btn && btn.disabled) return;
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '📊 送信中…';
+  }
+
+  const payload = {
+    'andpadid': getVal('andpadId'),
+    'andpad案件url': getVal('andpadUrl'),
+    'andpad案件名': getVal('facilityName'),
+    '所在地住所': getVal('address'),
+    '顧客名': getVal('clientName'),
+    '担当者名': getVal('assignedPerson'),
+    '図面格納先url': getVal('drawingUrl'),
+    '連系予定日': getVal('gridConnectionDate'),
+    '電力会社': getVal('powerCompany'),
+    '電力営業所': getVal('powerOffice'),
+    '電力顧客番号': getVal('powerCustomerNumber'),
+    '電力契約名義': getVal('powerContractName'),
+    '供給地点特定番号': getVal('supplyPointNumber'),
+    '既存契約プラン': getVal('existingPlan'),
+    '新契約プラン': getVal('newPlan'),
+    '契約容量a': getVal('contractAmperage'),
+    '契約容量kvakw': getVal('contractKva'),
+    '契約番号': getVal('contractNumber'),
+    '単線結線図': getVal('singleLineDiagram'),
+    '引込位置等指示図': getVal('dropPositionDiagram'),
+    '配置図': getVal('layoutDiagram'),
+    '平面図立面図': getVal('floorPlan'),
+    '屋根伏図': getVal('roofPlan'),
+    '構造計算書': getVal('structuralCalculation'),
+    'その他添付書類': getVal('otherDocuments'),
+    '太陽光メーカー第一希望': document.getElementById('panelManufacturer_1')?.value || getVal('panelManufacturer1'),
+    '太陽光メーカー第二希望': document.getElementById('panelManufacturer_2')?.value || getVal('panelManufacturer2'),
+    '蓄電池メーカー第一希望': document.getElementById('storageManufacturer_1')?.value || getVal('storageManufacturer1'),
+    '蓄電池メーカー第二希望': document.getElementById('storageManufacturer_2')?.value || getVal('storageManufacturer2'),
+    'パワコン設置希望場所': getVal('pcsLocation'),
+    '蓄電池設置希望場所': getVal('storageLocation'),
+    '施工制約': getVal('constructionConstraints'),
+    '搬入経路': getVal('deliveryRoute'),
+    '重機スペース': getVal('heavyEquipmentSpace'),
+    '足場必要性': getVal('scaffoldRequired'),
+    '塩害地域': getVal('saltDamage'),
+    '積雪地域': getVal('snowRegion'),
+    '基準風速': getVal('referenceWindSpeed'),
+    '地表面粗度区分': getVal('roughnessCategory'),
+    'その他特記事項': getVal('otherRemarks')
+  };
+
   fetch(GAS_URL, {
     method: 'POST',
-    redirect: 'follow',
-    headers: {'Content-Type': 'text/plain'},
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(payload)
-  }).then(r=>{
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    return r.text();
-  }).then(()=>{
-    showToast('スプレッドシートへの送信が完了しました', true);
-  }).catch(err=>{
-    showToast('送信に失敗しました: ' + err.message, false);
-  }).finally(()=>{
-    btn.disabled = false;
-    btn.textContent = '📊 スプレッドシートに送信';
+  })
+  .then(() => {
+    alert('📊 スプレッドシートへの送信処理が完了しました！');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '📊 スプレッドシートに送信';
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('❌ 送信に失敗しました。');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '📊 スプレッドシートに送信';
+    }
   });
 }
 
