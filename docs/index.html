@@ -897,16 +897,22 @@ function buildSpreadsheetPayload(){
   headers.push('図面格納先URL');
   values.push(metaState.drawingUrl||'');
   const earlyKeys=['gridOperator','utilityCompany','contractType','electricRate','maxDemandPower'];
-  earlyKeys.forEach(k=>{const f=allFields().find(x=>x.key===k);if(f){headers.push('No.'+(f.no==='*'?'-':f.no)+' '+f.lbl);values.push(getVal(f.key));}});
-  SEC.forEach(sec=>{
-    sec.subs.forEach(sub=>{
-      sub.fields.forEach(f=>{
+  earlyKeys.forEach(function(k){
+    var f=allFields().find(function(x){return x.key===k;});
+    if(f){
+      headers.push('No.'+(f.no==='*'?'-':f.no)+' '+f.lbl);
+      values.push(getVal(k));
+    }
+  });
+  SEC.forEach(function(sec){
+    sec.subs.forEach(function(sub){
+      sub.fields.forEach(function(f){
         if(f.key==='andpadId'||f.key==='andpadUrl') return;
-        if(earlyKeys.includes(f.key)) return;
-        const label = 'No.'+(f.no==='*'?'-':f.no)+' '+f.lbl;
+        if(earlyKeys.indexOf(f.key)!==-1) return;
+        var label = 'No.'+(f.no==='*'?'-':f.no)+' '+f.lbl;
         headers.push(label);
         if(f.type==='multi'){
-          const live=multiGetVals(f.key).filter(v=>v!=='');
+          var live=multiGetVals(f.key).filter(function(v){return v!=='';});
           values.push(live.length?live.join(', '):(getVal(f.key)||''));
         } else {
           values.push(getVal(f.key));
