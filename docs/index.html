@@ -917,7 +917,12 @@ function sendToGAS(){
   if (!btn || btn.disabled) return;
   btn.disabled = true;
   btn.textContent = '📊 送信中…';
-  const payload = buildSpreadsheetPayload();
+  const payload = {
+    andpadId: extractAndpadId(getVal('andpadId')) || '',
+    andpadUrl: getVal('andpadUrl') || '',
+    projectName: getVal('facilityName') || '',
+    demandLocation: getVal('address') || ''
+  };
   fetch(GAS_URL, {
     method: 'POST',
     redirect: 'follow',
