@@ -225,8 +225,8 @@ const SEC = [
       {no:11,key:'gridOperator',lbl:'接続送配電事業者',req:true,type:'t',hint:'一般送配電事業者名（東京電力PG等）'},
       {no:12,key:'utilityCompany',lbl:'電力会社（契約先）',req:true,type:'t',hint:'小売電気事業者名'},
       {no:13,key:'contractType',lbl:'契約種別',req:true,type:'s',opts:['低圧電灯','低圧電力','高圧','特別高圧']},
-      {no:14,key:'electricRate',lbl:'現契約 電気料金単価（実績）',req:true,type:'n',unit:'円/kWh',hint:'直近12ヶ月の請求書平均'},
-      {no:15,key:'maxDemandPower',lbl:'最大需要電力',req:false,type:'n',unit:'kW',hint:'過去1年間の最大需要電力'},
+      {no:14,key:'maxDemandPower',lbl:'最大需要電力',req:false,type:'n',unit:'kW',hint:'過去1年間の最大需要電力'},
+      {no:15,key:'electricRate',lbl:'現契約 電気料金単価（実績）',req:true,type:'n',unit:'円/kWh',hint:'直近12ヶ月の請求書平均'},
     ]},
   ]},
   {id:2,num:'②',title:'屋根・設置条件',color:'#1e40af',light:'#DBEAFE',subs:[
@@ -895,20 +895,10 @@ function buildSpreadsheetPayload(){
   headers.push('進捗');            values.push(metaState.progress||'');
   headers.push('図面格納先URL');    values.push(metaState.drawingUrl||'');
 
-  const earlyKeys = ['gridOperator','utilityCompany','contractType','electricRate','maxDemandPower'];
-  earlyKeys.forEach(k => {
-    const f = allFields().find(x => x.key === k);
-    if (f) {
-      headers.push('No.' + (f.no === '*' ? '-' : f.no) + ' ' + f.lbl);
-      values.push(getVal(f.key));
-    }
-  });
-
   SEC.forEach(sec => {
     sec.subs.forEach(sub => {
       sub.fields.forEach(f => {
         if (f.key === 'andpadId' || f.key === 'andpadUrl') return;
-        if (earlyKeys.includes(f.key)) return;
         const label = 'No.' + (f.no === '*' ? '-' : f.no) + ' ' + f.lbl;
         headers.push(label);
         if (f.type === 'multi') {
