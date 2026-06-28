@@ -916,11 +916,14 @@ function buildSpreadsheetPayload(){
   };
 }
 
-function sendToGAS(){
-  const btn = document.getElementById('btn-sheet');
-  if (!btn || btn.disabled) return;
-  btn.disabled = true;
-  btn.textContent = '📊 送信中…';
+function sendToGAS() {
+  const btn = document.querySelector('button[onclick="sendToGAS()"]') || document.querySelector('.btn-success');
+  if (btn && btn.disabled) return;
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '📊 送信中…';
+  }
+
   const payload = {
     'andpadid': getVal('andpadId'),
     'andpad案件url': getVal('andpadUrl'),
@@ -963,21 +966,27 @@ function sendToGAS(){
     '地表面粗度区分': getVal('roughnessCategory'),
     'その他特記事項': getVal('otherRemarks')
   };
+
   fetch(GAS_URL, {
     method: 'POST',
-    redirect: 'follow',
-    headers: {'Content-Type': 'text/plain'},
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
-  }).then(r=>{
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    return r.text();
-  }).then(()=>{
-    showToast('スプレッドシートへの送信が完了しました', true);
-  }).catch(err=>{
-    showToast('送信に失敗しました: ' + err.message, false);
-  }).finally(()=>{
-    btn.disabled = false;
-    btn.textContent = '📊 スプレッドシートに送信';
+  })
+  .then(() => {
+    alert('📊 スプレッドシートへの送信処理が完了しました！');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '📊 スプレッドシートに送信';
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('❌ 送信に失敗しました。');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '📊 スプレッドシートに送信';
+    }
   });
 }
 
