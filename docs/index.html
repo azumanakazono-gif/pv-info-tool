@@ -917,47 +917,48 @@ function sendToGAS(){
   if (!btn || btn.disabled) return;
   btn.disabled = true;
   btn.textContent = '📊 送信中…';
-  const payload = {};
-  payload['andpadid'] = getVal('andpadId') || '';
-  payload['andpad案件url'] = getVal('andpadUrl') || '';
-  payload['andpad案件名'] = getVal('facilityName') || '';
-  payload['所在地（住所）'] = getVal('address') || '';
-  payload['顧客名'] = getVal('clientName') || '';
-  payload['担当者名'] = getVal('assignedPerson') || '';
-  payload['図面格納先url'] = getVal('drawingUrl') || '';
-  payload['連系予定日'] = getVal('startTarget') || '';
-  payload['電力会社'] = getVal('utilityCompany') || '';
-  payload['電力営業所'] = getVal('gridOperator') || '';
-  payload['電力顧客番号'] = getVal('contractPower') || '';
-  payload['電力契約名義'] = getVal('contractType') || '';
-  payload['供給地点特定番号'] = getVal('receptionPoint') || '';
-  payload['既存契約プラン'] = getVal('receptionMethod') || '';
-  payload['新契約プラン'] = getVal('connectionPoint') || '';
-  payload['契約容量(a)'] = getVal('maxDemandPower') || '';
-  payload['契約容量(kva/kw)'] = getVal('transformerCapSingle') || '';
-  payload['契約番号'] = getVal('poleNum') || '';
-  payload['単線結線図'] = getVal('singleLineDiagram') || '';
-  payload['引込位置等指示図'] = getVal('receptionPoint') || '';
-  payload['配置図'] = getVal('roofTotalArea') || '';
-  payload['平面図・立面図'] = getVal('roofFaces') || '';
-  payload['屋根伏図'] = getVal('roofShape') || '';
-  payload['構造計算書'] = getVal('structuralCalc') || '';
-  payload['その他添付書類'] = getVal('otherNotes') || '';
-  payload['太陽光メーカー(第一希望)'] = getVal('panelSpec') || '';
-  payload['太陽光メーカー(第二希望)'] = getVal('pcsModel') || '';
-  payload['蓄電池メーカー(第一希望)'] = getVal('batteryPresent') || '';
-  payload['蓄電池メーカー(第二希望)'] = getVal('batteryCap') || '';
-  payload['パワコン設置希望場所'] = getVal('pcsLocation') || '';
-  payload['蓄電池設置希望場所'] = getVal('batteryCap') || '';
-  payload['施工制約'] = getVal('accessConstraints') || '';
-  payload['搬入経路'] = getVal('accessRoad') || '';
-  payload['重機スペース'] = getVal('cranePlan') || '';
-  payload['足場必要性'] = getVal('scaffolding') || '';
-  payload['塩害地域'] = getVal('saltDamage') || '';
-  payload['積雪地域'] = getVal('heavySnow') || '';
-  payload['基準風速'] = getVal('windSpeed') || '';
-  payload['地表面粗度区分'] = getVal('roughnessClass') || '';
-  payload['その他特記事項'] = getVal('otherNotes') || '';
+  const payload = {
+    'andpadid': getVal('andpadId'),
+    'andpad案件url': getVal('andpadUrl'),
+    'andpad案件名': getVal('facilityName'),
+    '所在地（住所）': getVal('address'),
+    '顧客名': getVal('clientName'),
+    '担当者名': getVal('assignedPerson'),
+    '図面格納先url': getVal('drawingUrl'),
+    '連系予定日': getVal('startTarget'),
+    '電力会社': getVal('utilityCompany'),
+    '電力営業所': getVal('gridOperator'),
+    '電力顧客番号': getVal('contractPower'),
+    '電力契約名義': getVal('contractType'),
+    '供給地点特定番号': getVal('receptionPoint'),
+    '既存契約プラン': getVal('receptionMethod'),
+    '新契約プラン': getVal('connectionPoint'),
+    '契約容量(a)': getVal('maxDemandPower'),
+    '契約容量(kva/kw)': getVal('transformerCapSingle'),
+    '契約番号': getVal('poleNum'),
+    '単線結線図': getVal('singleLineDiagram'),
+    '引込位置等指示図': getVal('receptionPoint'),
+    '配置図': getVal('roofTotalArea'),
+    '平面図・立面図': getVal('roofFaces'),
+    '屋根伏図': getVal('roofShape'),
+    '構造計算書': getVal('structuralCalc'),
+    'その他添付書類': getVal('otherNotes'),
+    '太陽光メーカー(第一希望)': getVal('panelSpec'),
+    '太陽光メーカー(第二希望)': getVal('pcsModel'),
+    '蓄電池メーカー(第一希望)': getVal('batteryPresent'),
+    '蓄電池メーカー(第二希望)': getVal('batteryCap'),
+    'パワコン設置希望場所': getVal('pcsLocation'),
+    '蓄電池設置希望場所': getVal('batteryCap'),
+    '施工制約': getVal('accessConstraints'),
+    '搬入経路': getVal('accessRoad'),
+    '重機スペース': getVal('cranePlan'),
+    '足場必要性': getVal('scaffolding'),
+    '塩害地域': getVal('saltDamage'),
+    '積雪地域': getVal('heavySnow'),
+    '基準風速': getVal('windSpeed'),
+    '地表面粗度区分': getVal('roughnessClass'),
+    'その他特記事項': getVal('otherNotes')
+  };
   fetch(GAS_URL, {
     method: 'POST',
     redirect: 'follow',
