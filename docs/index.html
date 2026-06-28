@@ -69,11 +69,11 @@ body{font-family:"Hiragino Sans","Yu Gothic UI",system-ui,sans-serif;font-size:1
 .freq{display:flex;align-items:center;justify-content:center;color:var(--req);font-size:11px;font-weight:700;border-right:1px solid var(--border);padding:0 3px}
 .finp{display:flex;align-items:center;padding:4px 6px}
 .funit{display:flex;align-items:center;padding:4px 6px;font-size:11px;color:var(--muted);border-left:1px solid var(--border);white-space:nowrap;min-width:60px}
-.btn-link{margin-left:6px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--c1);border:1px solid var(--c1);border-radius:4px;text-decoration:none;white-space:nowrap;cursor:pointer;flex-shrink:0}
+.btn-link{margin-left:6px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--c1);background:none;border:1px solid var(--c1);border-radius:4px;text-decoration:none;white-space:nowrap;cursor:pointer;flex-shrink:0}
 .btn-link:hover{background:var(--c1p)}
 .btn-link.disabled{opacity:.35;pointer-events:none;cursor:default}
-.drawing-url-input{font-size:14px!important;font-weight:700;padding:6px 10px!important;border:2px solid #bbb!important;border-radius:5px;background:#fffde7!important;flex:1}
-.btn-link-drawing{font-size:13px!important;padding:6px 14px!important;border-width:2px!important}
+.drawing-url-input{font-size:11px!important;font-weight:700;padding:4px 7px!important;border:1.5px solid #bbb!important;border-radius:4px;background:#fffde7!important;flex:1;min-width:0;box-sizing:border-box}
+.btn-link-drawing{font-size:10px!important;padding:3px 8px!important;border-width:1.5px!important;white-space:nowrap;flex-shrink:0;box-sizing:border-box}
 .lbl-drawing{font-size:14px!important;font-weight:900!important;color:#0d47a1!important;border-bottom:2px solid #0d47a1;padding-bottom:2px;display:inline-block;margin-bottom:6px!important}
 .multi-wrap{display:flex;flex-direction:column;gap:4px;width:100%}
 .multi-row{display:flex;align-items:center;gap:4px}
@@ -222,174 +222,176 @@ const SEC = [
       {no:10,key:'projectMgr',lbl:'プロジェクト責任者（弊社側）',req:false,type:'t',hint:'本シートの最終確認者'},
     ]},
     {id:'1-3',title:'電力契約区分',fields:[
-      {no:11,key:'utilityCompany',lbl:'電力会社（契約先）',req:true,type:'t',hint:'送配電事業者名（小売とは別）'},
-      {no:12,key:'contractType',lbl:'契約種別',req:true,type:'s',opts:['低圧電灯','低圧電力','高圧','特別高圧']},
-      {no:13,key:'electricRate',lbl:'現契約 電気料金単価（実績）',req:true,type:'n',unit:'円/kWh',hint:'直近12ヶ月の請求書平均'},
+      {no:11,key:'gridOperator',lbl:'接続送配電事業者',req:true,type:'t',hint:'東京電力パワーグリッド 等'},
+      {no:12,key:'utilityCompany',lbl:'電力会社（契約先）',req:true,type:'t',hint:'東京電力エナジーパートナー 等'},
+      {no:13,key:'contractType',lbl:'契約種別',req:true,type:'t',hint:'高圧電力A、業務用電力 等'},
+      {no:14,key:'maxDemandPower',lbl:'最大需要電力',req:true,type:'n',unit:'kW',hint:'直近1年間の最大デマンド値（kW）'},
+      {no:15,key:'electricRate',lbl:'現契約 電気料金単価（実績）',req:true,type:'n',unit:'円/kWh',hint:'過去1年間の平均単価（円/kWh）'},
     ]},
   ]},
   {id:2,num:'②',title:'屋根・設置条件',color:'#1e40af',light:'#DBEAFE',subs:[
     {id:'2-1',title:'屋根種別・設置方法',fields:[
-      {no:14,key:'roofShape',lbl:'屋根形状',req:true,type:'s',opts:['折板（はぜ締め型）','折板（重ね式）','瓦棒','陸屋根','瓦','スレート','その他']},
-      {no:15,key:'roofMaterial',lbl:'屋根材',req:true,type:'t',hint:'材質・板厚を記載（架台選定の判断材料）'},
-      {no:16,key:'mountingFrame',lbl:'使用架台',req:true,type:'t',hint:'メーカー / 架台種類 / 個数'},
-      {no:17,key:'roofFaces',lbl:'屋根面数',req:true,type:'n',unit:'面',hint:'切妻=2面、寄棟=4面、片流れ=1面'},
-      {no:18,key:'roofTotalArea',lbl:'屋根全体面積',req:true,type:'n',unit:'㎡',hint:'図面または現地実測値'},
-      {no:19,key:'pvEffArea',lbl:'PV設置可能 有効面積',req:true,type:'n',unit:'㎡',hint:'障害物・離隔・点検通路を除く'},
+      {no:16,key:'roofShape',lbl:'屋根形状',req:true,type:'s',opts:['折板（はぜ締め型）','折板（重ね式）','瓦棒','陸屋根','瓦','スレート','その他']},
+      {no:17,key:'roofMaterial',lbl:'屋根材',req:true,type:'t',hint:'材質・板厚を記載（架台選定の判断材料）'},
+      {no:18,key:'mountingFrame',lbl:'使用架台',req:true,type:'t',hint:'メーカー / 架台種類 / 個数'},
+      {no:19,key:'roofFaces',lbl:'屋根面数',req:true,type:'n',unit:'面',hint:'切妻=2面、寄棟=4面、片流れ=1面'},
+      {no:20,key:'roofTotalArea',lbl:'屋根全体面積',req:true,type:'n',unit:'㎡',hint:'図面または現地実測値'},
+      {no:21,key:'pvEffArea',lbl:'PV設置可能 有効面積',req:true,type:'n',unit:'㎡',hint:'障害物・離隔・点検通路を除く'},
     ]},
     {id:'2-2',title:'方位・傾斜',fields:[
-      {no:20,key:'azimuth',lbl:'方位（真南からの偏角）',req:true,type:'t',unit:'度',hint:'真南=0°、東=-90°、西=+90°、各面ごとに記載'},
-      {no:21,key:'roofSlope',lbl:'屋根勾配',req:true,type:'t',unit:'寸 or 度',hint:'発電量試算に必須'},
+      {no:22,key:'azimuth',lbl:'方位（真南からの偏角）',req:true,type:'t',unit:'度',hint:'真南=0°、東=-90°、西=+90°、各面ごとに記載'},
+      {no:23,key:'roofSlope',lbl:'屋根勾配',req:true,type:'t',unit:'寸 or 度',hint:'発電量試算に必須'},
     ]},
     {id:'2-3',title:'障害物・離隔条件',fields:[
-      {no:22,key:'roofObstacles',lbl:'屋根上の障害物',req:true,type:'t',hint:'天窓/ダクト/室外機/避雷針/看板 等を全列挙'},
-      {no:23,key:'shadowSources',lbl:'影の発生源（隣接建物・樹木等）',req:true,type:'t',hint:'周辺建物・樹木の高さと方位'},
-      {no:24,key:'edgeClearance',lbl:'端部離隔（要求値）',req:false,type:'n',unit:'mm',hint:'屋根端から500mm 等'},
+      {no:24,key:'roofObstacles',lbl:'屋根上の障害物',req:true,type:'t',hint:'天窓/ダクト/室外機/避雷針/看板 等を全列挙'},
+      {no:25,key:'shadowSources',lbl:'影の発生源（隣接建物・樹木等）',req:true,type:'t',hint:'周辺建物・樹木の高さと方位'},
+      {no:26,key:'edgeClearance',lbl:'端部離隔（要求値）',req:false,type:'n',unit:'mm',hint:'屋根端から500mm 等'},
     ]},
     {id:'2-4',title:'荷重条件（JIS C 8955準拠）',fields:[
-      {no:25,key:'snowDepth',lbl:'設計用 地上積雪量（垂直積雪量）',req:true,type:'n',unit:'m',hint:'JIS C 8955。建設地の特定行政庁指定値'},
-      {no:26,key:'windSpeed',lbl:'基準風速 V₀',req:true,type:'n',unit:'m/s',hint:'JIS C 8955 / 建築基準法施行令87条'},
-      {no:27,key:'roughnessClass',lbl:'地表面粗度区分',req:true,type:'s',opts:['Ⅰ（海上等）','Ⅱ（田園・郊外）','Ⅲ（一般市街地）','Ⅳ（都市部高層密集）']},
-      {no:28,key:'buildingHeight',lbl:'建物高さ H',req:true,type:'n',unit:'m',hint:'GL〜屋根頂部までの高さ'},
-      {no:29,key:'importanceFactor',lbl:'用途係数 I',req:false,type:'n',hint:'通常1.0 / 避難所等は1.32'},
-      {no:30,key:'structuralCalc',lbl:'構造計算書の有無',req:true,type:'s',opts:['有（取得可）','有（取得不可）','無']},
-      {no:31,key:'panelLoadEstimate',lbl:'想定積載荷重（パネル+架台）',req:false,type:'n',unit:'kg/㎡',hint:'通常15〜25 kg/㎡'},
-      {no:32,key:'allowableLoad',lbl:'屋根の許容積載荷重',req:true,type:'n',unit:'kg/㎡',hint:'構造計算書または設計図書から確認'},
+      {no:27,key:'snowDepth',lbl:'設計用 地上積雪量（垂直積雪量）',req:true,type:'n',unit:'m',hint:'JIS C 8955。建設地の特定行政庁指定値'},
+      {no:28,key:'windSpeed',lbl:'基準風速 V₀',req:true,type:'n',unit:'m/s',hint:'JIS C 8955 / 建築基準法施行令87条'},
+      {no:29,key:'roughnessClass',lbl:'地表面粗度区分',req:true,type:'s',opts:['Ⅰ（海上等）','Ⅱ（田園・郊外）','Ⅲ（一般市街地）','Ⅳ（都市部高層密集）']},
+      {no:30,key:'buildingHeight',lbl:'建物高さ H',req:true,type:'n',unit:'m',hint:'GL〜屋根頂部までの高さ'},
+      {no:31,key:'importanceFactor',lbl:'用途係数 I',req:false,type:'n',hint:'通常1.0 / 避難所等は1.32'},
+      {no:32,key:'structuralCalc',lbl:'構造計算書の有無',req:true,type:'s',opts:['有（取得可）','有（取得不可）','無']},
+      {no:33,key:'panelLoadEstimate',lbl:'想定積載荷重（パネル+架台）',req:false,type:'n',unit:'kg/㎡',hint:'通常15〜25 kg/㎡'},
+      {no:34,key:'allowableLoad',lbl:'屋根の許容積載荷重',req:true,type:'n',unit:'kg/㎡',hint:'構造計算書または設計図書から確認'},
     ]},
   ]},
   {id:3,num:'③',title:'電気条件',color:'#1d4ed8',light:'#EFF6FF',subs:[
     {id:'3-1',title:'受電設備',fields:[
-      {no:33,key:'poleNum',lbl:'電柱番号（引込元電柱）',req:true,type:'t',hint:'複数電柱から受電する場合は全て記載'},
-      {no:34,key:'receptionMethod',lbl:'受電方式',req:true,type:'s',opts:['低圧（電灯）','低圧（動力）','低圧（電灯・動力）','高圧（キュービクル）']},
-      {no:35,key:'receptionVoltage',lbl:'受電電圧',req:true,type:'n',unit:'V',hint:'100/200（低圧）/ 6600（高圧）'},
-      {no:36,key:'contractPower',lbl:'契約電力',req:true,type:'n',unit:'kW',hint:'電力会社との契約上の最大需要電力'},
-      {no:37,key:'receptionPoint',lbl:'受電点（引込柱／キュービクル位置）',req:true,type:'t',hint:'PV接続点との物理距離・配線ルートに必要'},
-      {no:38,key:'transformerCapSingle',lbl:'既設変圧器（主変圧器）容量（単相）',req:true,type:'multi',unit:'kVA',hint:'単相変圧器の容量'},
-      {no:38,key:'transformerCapThree',lbl:'既設変圧器（主変圧器）容量（三相）',req:true,type:'multi',unit:'kVA',hint:'三相変圧器の容量'},
-      {no:39,key:'transformerLoad',lbl:'変圧器の負荷率（実績）',req:false,type:'n',unit:'%',hint:'70%以上は変圧器更新も検討'},
+      {no:35,key:'poleNum',lbl:'電柱番号（引込元電柱）',req:true,type:'t',hint:'複数電柱から受電する場合は全て記載'},
+      {no:36,key:'receptionMethod',lbl:'受電方式',req:true,type:'s',opts:['低圧（電灯）','低圧（動力）','低圧（電灯・動力）','高圧（キュービクル）']},
+      {no:37,key:'receptionVoltage',lbl:'受電電圧',req:true,type:'n',unit:'V',hint:'100/200（低圧）/ 6600（高圧）'},
+      {no:38,key:'contractPower',lbl:'契約電力',req:true,type:'n',unit:'kW',hint:'電力会社との契約上の最大需要電力'},
+      {no:39,key:'receptionPoint',lbl:'受電点（引込柱／キュービクル位置）',req:true,type:'t',hint:'PV接続点との物理距離・配線ルートに必要'},
+      {no:40,key:'transformerCapSingle',lbl:'既設変圧器（主変圧器）容量（単相）',req:true,type:'multi',unit:'kVA',hint:'単相変圧器の容量'},
+      {no:40,key:'transformerCapThree',lbl:'既設変圧器（主変圧器）容量（三相）',req:true,type:'multi',unit:'kVA',hint:'三相変圧器の容量'},
+      {no:41,key:'transformerLoad',lbl:'変圧器の負荷率（実績）',req:false,type:'n',unit:'%',hint:'70%以上は変圧器更新も検討'},
     ]},
     {id:'3-2',title:'需要・使用量実績',fields:[
-      {no:40,key:'maxDemand',lbl:'最大需要電力（直近12ヶ月）',req:true,type:'n',unit:'kW',hint:'30分値の最大値。PVのkW逆算根拠'},
-      {no:41,key:'avgDemand',lbl:'平均需要電力',req:true,type:'n',unit:'kW',hint:'年間使用量÷年間稼働時間'},
-      {no:42,key:'annualUsage',lbl:'年間使用電力量',req:true,type:'n',unit:'kWh',hint:'直近12ヶ月の合計。請求書から集計'},
-      {no:43,key:'data30min',lbl:'30分値データの有無',req:true,type:'s',opts:['有（取得済）','取得予定','無'],hint:'自家消費率精度向上の鍵'},
-      {no:44,key:'operatingPattern',lbl:'稼働パターン（曜日・時間帯）',req:true,type:'t',hint:'平日8:00-17:00 / 土日休み等'},
-      {no:45,key:'seasonalChange',lbl:'季節変動の特徴',req:false,type:'t',hint:'夏季ピーク（冷房）等'},
+      {no:42,key:'maxDemand',lbl:'最大需要電力（直近12ヶ月）',req:true,type:'n',unit:'kW',hint:'30分値の最大値。PVのkW逆算根拠'},
+      {no:43,key:'avgDemand',lbl:'平均需要電力',req:true,type:'n',unit:'kW',hint:'年間使用量÷年間稼働時間'},
+      {no:44,key:'annualUsage',lbl:'年間使用電力量',req:true,type:'n',unit:'kWh',hint:'直近12ヶ月の合計。請求書から集計'},
+      {no:45,key:'data30min',lbl:'30分値データの有無',req:true,type:'s',opts:['有（取得済）','取得予定','無'],hint:'自家消費率精度向上の鍵'},
+      {no:46,key:'operatingPattern',lbl:'稼働パターン（曜日・時間帯）',req:true,type:'t',hint:'平日8:00-17:00 / 土日休み等'},
+      {no:47,key:'seasonalChange',lbl:'季節変動の特徴',req:false,type:'t',hint:'夏季ピーク（冷房）等'},
     ]},
     {id:'3-3',title:'連系条件',fields:[
-      {no:46,key:'connectionPoint',lbl:'系統連系点（接続予定箇所）',req:true,type:'t',hint:'低圧連系／高圧連系・主遮断器2次 等'},
-      {no:47,key:'simpleStudy',lbl:'簡易検討状況',req:true,type:'s',opts:['未着手','自家消費型（通常無）','申請準備中','申請済']},
-      {no:48,key:'gridConsult',lbl:'系統側 事前相談状況（接続検討）',req:true,type:'s',opts:['50kW未満必要なし','未着手','事前相談中','接続検討申込済','回答受領','接続契約締結']},
-      {no:49,key:'appStatus',lbl:'電力への申請状況',req:true,type:'s',opts:['未申請','申請準備中','申請済（受付待ち）','受付済','承認・契約済']},
-      {no:50,key:'gridWorkCost',lbl:'工事費負担金（提示額）',req:false,type:'n',unit:'万円',hint:'系統側からの提示額'},
+      {no:48,key:'connectionPoint',lbl:'系統連系点（接続予定箇所）',req:true,type:'t',hint:'低圧連系／高圧連系・主遮断器2次 等'},
+      {no:49,key:'simpleStudy',lbl:'簡易検討状況',req:true,type:'s',opts:['未着手','自家消費型（通常無）','申請準備中','申請済']},
+      {no:50,key:'gridConsult',lbl:'系統側 事前相談状況（接続検討）',req:true,type:'s',opts:['50kW未満必要なし','未着手','事前相談中','接続検討申込済','回答受領','接続契約締結']},
+      {no:51,key:'appStatus',lbl:'電力への申請状況',req:true,type:'s',opts:['未申請','申請準備中','申請済（受付待ち）','受付済','承認・契約済']},
+      {no:52,key:'gridWorkCost',lbl:'工事費負担金（提示額）',req:false,type:'n',unit:'万円',hint:'系統側からの提示額'},
     ]},
     {id:'3-4',title:'単線結線情報',fields:[
-      {no:51,key:'singleLineDiag',lbl:'単線結線図の有無',req:true,type:'s',opts:['有（最新版）','有（旧版）','無']},
-      {no:52,key:'relaySettings',lbl:'保護リレー設定値（OCR/UVR/OVR等）',req:false,type:'t',hint:'OCR: 50A/0.2s 等'},
-      {no:53,key:'powerFactor',lbl:'受電点の力率',req:false,type:'n',unit:'%',hint:'進相コンデンサ設置状況も記載'},
-      {no:54,key:'harmonics',lbl:'高調波対策の有無',req:false,type:'t',hint:'リアクトル付コンデンサ設置済 等'},
+      {no:53,key:'singleLineDiag',lbl:'単線結線図の有無',req:true,type:'s',opts:['有（最新版）','有（旧版）','無']},
+      {no:54,key:'relaySettings',lbl:'保護リレー設定値（OCR/UVR/OVR等）',req:false,type:'t',hint:'OCR: 50A/0.2s 等'},
+      {no:55,key:'powerFactor',lbl:'受電点の力率',req:false,type:'n',unit:'%',hint:'進相コンデンサ設置状況も記載'},
+      {no:56,key:'harmonics',lbl:'高調波対策の有無',req:false,type:'t',hint:'リアクトル付コンデンサ設置済 等'},
     ]},
   ]},
   {id:4,num:'④',title:'太陽光設備条件',color:'#92400e',light:'#FEF3C7',subs:[
     {id:'4-1',title:'容量・パネル仕様',fields:[
-      {no:55,key:'pvCapacity',lbl:'想定設置容量',req:true,type:'n',unit:'kW',hint:'屋根面積×係数（折板:0.10 陸屋根:0.12 kW/㎡）からの試算値'},
-      {no:56,key:'annualGenTarget',lbl:'目標発電量（年間）',req:false,type:'n',unit:'kWh',hint:'kW × 1,100〜1,200（地域・方位による）'},
-      {no:57,key:'panelSpec',lbl:'希望パネルメーカー／型式',req:true,type:'t',hint:'塩害地は耐塩仕様必須。指定無ければ「未定」'},
-      {no:58,key:'panelCount',lbl:'パネル枚数（試算値）',req:true,type:'t',hint:'Watt×枚数＝DC容量kW'},
+      {no:57,key:'pvCapacity',lbl:'想定設置容量',req:true,type:'n',unit:'kW',hint:'屋根面積×係数（折板:0.10 陸屋根:0.12 kW/㎡）からの試算値'},
+      {no:58,key:'annualGenTarget',lbl:'目標発電量（年間）',req:false,type:'n',unit:'kWh',hint:'kW × 1,100〜1,200（地域・方位による）'},
+      {no:59,key:'panelSpec',lbl:'希望パネルメーカー／型式',req:true,type:'t',hint:'塩害地は耐塩仕様必須。指定無ければ「未定」'},
+      {no:60,key:'panelCount',lbl:'パネル枚数（試算値）',req:true,type:'t',hint:'Watt×枚数＝DC容量kW'},
     ]},
     {id:'4-2',title:'PCS（パワーコンディショナ）',fields:[
-      {no:59,key:'pcsPhase',lbl:'PCS相別要件',req:true,type:'s',opts:['三相のみ','単相のみ','三相+単相併用'],hint:'受電方式・負荷構成と整合させる'},
-      {no:60,key:'pcsModel',lbl:'PCS型式',req:true,type:'t',hint:'メーカー／型式（複数種類の場合は型式ごとに記載）'},
-      {no:61,key:'pcsConfig',lbl:'PCS構成方式',req:true,type:'s',opts:['集中型','分散型（ストリング型）','マイクロインバータ']},
-      {no:62,key:'pcsRatedOutput',lbl:'PCS定格出力（1台あたり）',req:true,type:'n',unit:'kW'},
-      {no:63,key:'pcsLocation',lbl:'PCS設置場所',req:true,type:'t',hint:'屋外／屋内／キュービクル内。冷却・メンテ性考慮'},
+      {no:61,key:'pcsPhase',lbl:'PCS相別要件',req:true,type:'s',opts:['三相のみ','単相のみ','三相+単相併用'],hint:'受電方式・負荷構成と整合させる'},
+      {no:62,key:'pcsModel',lbl:'PCS型式',req:true,type:'t',hint:'メーカー／型式（複数種類の場合は型式ごとに記載）'},
+      {no:63,key:'pcsConfig',lbl:'PCS構成方式',req:true,type:'s',opts:['集中型','分散型（ストリング型）','マイクロインバータ']},
+      {no:64,key:'pcsRatedOutput',lbl:'PCS定格出力（1台あたり）',req:true,type:'n',unit:'kW'},
+      {no:65,key:'pcsLocation',lbl:'PCS設置場所',req:true,type:'t',hint:'屋外／屋内／キュービクル内。冷却・メンテ性考慮'},
     ]},
     {id:'4-3',title:'EMS（上位監視装置）',fields:[
-      {no:64,key:'monitorDevice',lbl:'監視装置',req:true,type:'t',hint:'メーカー / 品名 / 型式'},
-      {no:65,key:'monitorAccessory',lbl:'監視装置付属機器類',req:true,type:'t',hint:'ゲートウェイ等 メーカー / 品名 / 型式'},
+      {no:66,key:'monitorDevice',lbl:'監視装置',req:true,type:'t',hint:'メーカー / 品名 / 型式'},
+      {no:67,key:'monitorAccessory',lbl:'監視装置付属機器類',req:true,type:'t',hint:'ゲートウェイ等 メーカー / 品名 / 型式'},
     ]},
     {id:'4-4',title:'PPA機器',fields:[
-      {no:66,key:'smartMeter',lbl:'スマートメーター',req:true,type:'t',hint:'メーカー / 型式'},
+      {no:68,key:'smartMeter',lbl:'スマートメーター',req:true,type:'t',hint:'メーカー / 型式'},
     ]},
     {id:'4-5',title:'連系・運用条件（最重要）',fields:[
-      {no:67,key:'reverseFlow',lbl:'逆潮流の有無',req:true,type:'s',opts:['可（余剰売電可）','不可（自家消費前提）','未定'],hint:'可→余剰売電可能 / 不可→RPR必須'},
-      {no:68,key:'rprRequired',lbl:'RPR（逆電力継電器）設置',req:true,type:'s',opts:['必須','不要','検討中'],hint:'逆潮流不可 → 必須'},
-      {no:69,key:'protectRelay',lbl:'保護継電器',req:true,type:'t',hint:'台数 型式（例: 1台 KP-PRRV-RPC）'},
-      {no:70,key:'zpd',lbl:'ZPD',req:true,type:'t',hint:'台数 型式（例: 1台 VOC-1MS2-1）'},
-      {no:71,key:'selfConsumTarget',lbl:'目標自家消費率',req:true,type:'n',unit:'%',hint:'逆潮流不可なら≥95%設計 / 30分値ベースで試算'},
-      {no:72,key:'batteryPresent',lbl:'蓄電池の有無',req:true,type:'s',opts:['有','無','将来増設計画あり']},
-      {no:73,key:'batteryCap',lbl:'蓄電池容量（有の場合）',req:false,type:'n',unit:'kWh',hint:'用途・需要パターンから決定'},
+      {no:69,key:'reverseFlow',lbl:'逆潮流の有無',req:true,type:'s',opts:['可（余剰売電可）','不可（自家消費前提）','未定'],hint:'可→余剰売電可能 / 不可→RPR必須'},
+      {no:70,key:'rprRequired',lbl:'RPR（逆電力継電器）設置',req:true,type:'s',opts:['必須','不要','検討中'],hint:'逆潮流不可 → 必須'},
+      {no:71,key:'protectRelay',lbl:'保護継電器',req:true,type:'t',hint:'台数 型式（例: 1台 KP-PRRV-RPC）'},
+      {no:72,key:'zpd',lbl:'ZPD',req:true,type:'t',hint:'台数 型式（例: 1台 VOC-1MS2-1）'},
+      {no:73,key:'selfConsumTarget',lbl:'目標自家消費率',req:true,type:'n',unit:'%',hint:'逆潮流不可なら≥95%設計 / 30分値ベースで試算'},
+      {no:74,key:'batteryPresent',lbl:'蓄電池の有無',req:true,type:'s',opts:['有','無','将来増設計画あり']},
+      {no:75,key:'batteryCap',lbl:'蓄電池容量（有の場合）',req:false,type:'n',unit:'kWh',hint:'用途・需要パターンから決定'},
     ]},
     {id:'4-6',title:'自立運転・特定負荷（最重要）',fields:[
-      {no:74,key:'standAlone',lbl:'自立運転機能',req:true,type:'s',opts:['必要','不要'],hint:'特定負荷との組み合わせで回路設計'},
-      {no:75,key:'specificLoad',lbl:'特定負荷の有無',req:true,type:'s',opts:['有','無'],hint:'有→自立運転回路の単相/三相分離設計が必要'},
-      {no:76,key:'load1Name',lbl:'特定負荷① 名称',req:false,type:'t'},
-      {no:77,key:'load1Cap',lbl:'特定負荷① 容量',req:false,type:'n',unit:'kW'},
-      {no:78,key:'load1Phase',lbl:'特定負荷① 相別',req:false,type:'s',opts:['単相100V','単相200V','三相200V','三相400V']},
-      {no:79,key:'load1Priority',lbl:'特定負荷① 優先度',req:false,type:'s',opts:['高（停電時 必ず確保）','中','低']},
-      {no:80,key:'load2Name',lbl:'特定負荷② 名称',req:false,type:'t'},
-      {no:81,key:'load2Cap',lbl:'特定負荷② 容量',req:false,type:'n',unit:'kW'},
-      {no:82,key:'load2Phase',lbl:'特定負荷② 相別',req:false,type:'s',opts:['単相100V','単相200V','三相200V','三相400V']},
-      {no:83,key:'load2Priority',lbl:'特定負荷② 優先度',req:false,type:'s',opts:['高（停電時 必ず確保）','中','低']},
-      {no:84,key:'load3Name',lbl:'特定負荷③ 名称',req:false,type:'t'},
-      {no:85,key:'load3Cap',lbl:'特定負荷③ 容量',req:false,type:'n',unit:'kW'},
-      {no:86,key:'load3Phase',lbl:'特定負荷③ 相別',req:false,type:'s',opts:['単相100V','単相200V','三相200V','三相400V']},
-      {no:87,key:'load3Priority',lbl:'特定負荷③ 優先度',req:false,type:'s',opts:['高（停電時 必ず確保）','中','低']},
-      {no:88,key:'totalSpecLoad',lbl:'特定負荷 合計容量',req:false,type:'n',unit:'kW',hint:'PCS自立運転容量の選定根拠'},
+      {no:76,key:'standAlone',lbl:'自立運転機能',req:true,type:'s',opts:['必要','不要'],hint:'特定負荷との組み合わせで回路設計'},
+      {no:77,key:'specificLoad',lbl:'特定負荷の有無',req:true,type:'s',opts:['有','無'],hint:'有→自立運転回路の単相/三相分離設計が必要'},
+      {no:78,key:'load1Name',lbl:'特定負荷① 名称',req:false,type:'t'},
+      {no:79,key:'load1Cap',lbl:'特定負荷① 容量',req:false,type:'n',unit:'kW'},
+      {no:80,key:'load1Phase',lbl:'特定負荷① 相別',req:false,type:'s',opts:['単相100V','単相200V','三相200V','三相400V']},
+      {no:81,key:'load1Priority',lbl:'特定負荷① 優先度',req:false,type:'s',opts:['高（停電時 必ず確保）','中','低']},
+      {no:82,key:'load2Name',lbl:'特定負荷② 名称',req:false,type:'t'},
+      {no:83,key:'load2Cap',lbl:'特定負荷② 容量',req:false,type:'n',unit:'kW'},
+      {no:84,key:'load2Phase',lbl:'特定負荷② 相別',req:false,type:'s',opts:['単相100V','単相200V','三相200V','三相400V']},
+      {no:85,key:'load2Priority',lbl:'特定負荷② 優先度',req:false,type:'s',opts:['高（停電時 必ず確保）','中','低']},
+      {no:86,key:'load3Name',lbl:'特定負荷③ 名称',req:false,type:'t'},
+      {no:87,key:'load3Cap',lbl:'特定負荷③ 容量',req:false,type:'n',unit:'kW'},
+      {no:88,key:'load3Phase',lbl:'特定負荷③ 相別',req:false,type:'s',opts:['単相100V','単相200V','三相200V','三相400V']},
+      {no:89,key:'load3Priority',lbl:'特定負荷③ 優先度',req:false,type:'s',opts:['高（停電時 必ず確保）','中','低']},
+      {no:90,key:'totalSpecLoad',lbl:'特定負荷 合計容量',req:false,type:'n',unit:'kW',hint:'PCS自立運転容量の選定根拠'},
     ]},
   ]},
   {id:5,num:'⑤',title:'施工条件',color:'#4c1d95',light:'#EDE9FE',subs:[
     {id:'5-1',title:'搬入・輸送',fields:[
-      {no:89,key:'distFromYard',lbl:'最寄り資材ヤード／港から現地までの距離',req:false,type:'n',unit:'km',hint:'フェリー区間は別途記載'},
-      {no:90,key:'accessRoad',lbl:'搬入経路の道路状況',req:true,type:'t',hint:'国道→県道→市道。最狭部の幅員(m)を記載'},
-      {no:91,key:'largeVehicle',lbl:'大型車両進入可否',req:true,type:'s',opts:['10t車可','4t車可','2t車可','軽トラのみ'],hint:'橋梁・トンネル制限も確認'},
-      {no:92,key:'cranePlan',lbl:'クレーン車手配',req:true,type:'t',hint:'現地調達可／本土から回送等'},
-      {no:93,key:'accessConstraints',lbl:'搬入導線の制約事項',req:false,type:'t',hint:'高さ／重量／時間帯制限等'},
+      {no:91,key:'distFromYard',lbl:'最寄り資材ヤード／港から現地までの距離',req:false,type:'n',unit:'km',hint:'フェリー区間は別途記載'},
+      {no:92,key:'accessRoad',lbl:'搬入経路の道路状況',req:true,type:'t',hint:'国道→県道→市道。最狭部の幅員(m)を記載'},
+      {no:93,key:'largeVehicle',lbl:'大型車両進入可否',req:true,type:'s',opts:['10t車可','4t車可','2t車可','軽トラのみ'],hint:'橋梁・トンネル制限も確認'},
+      {no:94,key:'cranePlan',lbl:'クレーン車手配',req:true,type:'t',hint:'現地調達可／本土から回送等'},
+      {no:95,key:'accessConstraints',lbl:'搬入導線の制約事項',req:false,type:'t',hint:'高さ／重量／時間帯制限等'},
     ]},
     {id:'5-2',title:'現地作業環境',fields:[
-      {no:94,key:'scaffolding',lbl:'足場の必要性',req:true,type:'s',opts:['必要（全周）','必要（一部）','不要'],hint:'屋根高さ・周辺状況による'},
-      {no:95,key:'workHours',lbl:'作業時間制限',req:true,type:'t',hint:'近隣調整による時間帯制限'},
-      {no:96,key:'noiseRestrict',lbl:'騒音・振動の制約',req:false,type:'t',hint:'工業地域／住宅地域。条例上の規制値'},
-      {no:97,key:'utilities',lbl:'電源・水道（仮設）',req:false,type:'t',hint:'施主貸与／別途仮設要'},
+      {no:96,key:'scaffolding',lbl:'足場の必要性',req:true,type:'s',opts:['必要（全周）','必要（一部）','不要'],hint:'屋根高さ・周辺状況による'},
+      {no:97,key:'workHours',lbl:'作業時間制限',req:true,type:'t',hint:'近隣調整による時間帯制限'},
+      {no:98,key:'noiseRestrict',lbl:'騒音・振動の制約',req:false,type:'t',hint:'工業地域／住宅地域。条例上の規制値'},
+      {no:99,key:'utilities',lbl:'電源・水道（仮設）',req:false,type:'t',hint:'施主貸与／別途仮設要'},
     ]},
     {id:'5-3',title:'人員・宿泊',fields:[
-      {no:98,key:'localContractor',lbl:'地元施工業者の活用可否',req:true,type:'s',opts:['可','不可'],hint:'不可→本土から派遣→宿泊・日当UP'},
-      {no:99,key:'accommodation',lbl:'宿泊の必要性',req:true,type:'s',opts:['必要','不要（日帰り可）']},
-      {no:100,key:'accommodationInfo',lbl:'宿泊施設の有無・収容人数',req:false,type:'t',hint:'工事ピーク時の同時宿泊可能人数'},
-      {no:101,key:'busySeason',lbl:'繁忙期・閑散期',req:false,type:'t',hint:'観光地等は時期で宿泊確保難易度が変わる'},
+      {no:100,key:'localContractor',lbl:'地元施工業者の活用可否',req:true,type:'s',opts:['可','不可'],hint:'不可→本土から派遣→宿泊・日当UP'},
+      {no:101,key:'accommodation',lbl:'宿泊の必要性',req:true,type:'s',opts:['必要','不要（日帰り可）']},
+      {no:102,key:'accommodationInfo',lbl:'宿泊施設の有無・収容人数',req:false,type:'t',hint:'工事ピーク時の同時宿泊可能人数'},
+      {no:103,key:'busySeason',lbl:'繁忙期・閑散期',req:false,type:'t',hint:'観光地等は時期で宿泊確保難易度が変わる'},
     ]},
     {id:'5-4',title:'気象・自然条件',fields:[
-      {no:102,key:'saltDamage',lbl:'塩害地域 該当の有無',req:true,type:'s',opts:['重塩害（海岸線200m以内）','塩害（200m〜2km）','非該当（2km超）'],hint:'重塩害・塩害→耐塩仕様パネル・架台必須'},
-      {no:103,key:'heavySnow',lbl:'豪雪地域 該当の有無',req:true,type:'s',opts:['豪雪','一般地域'],hint:'豪雪→雪止め・耐雪架台'},
-      {no:104,key:'workablePeriod',lbl:'工事可能期間（梅雨・台風除く）',req:false,type:'t',hint:'梅雨・台風・冬季凍結等の影響期間'},
+      {no:104,key:'saltDamage',lbl:'塩害地域 該当の有無',req:true,type:'s',opts:['重塩害（海岸線200m以内）','塩害（200m〜2km）','非該当（2km超）'],hint:'重塩害・塩害→耐塩仕様パネル・架台必須'},
+      {no:105,key:'heavySnow',lbl:'豪雪地域 該当の有無',req:true,type:'s',opts:['豪雪','一般地域'],hint:'豪雪→雪止め・耐雪架台'},
+      {no:106,key:'workablePeriod',lbl:'工事可能期間（梅雨・台風除く）',req:false,type:'t',hint:'梅雨・台風・冬季凍結等の影響期間'},
     ]},
   ]},
   {id:6,num:'⑥',title:'リスク・制約',color:'#991b1b',light:'#FEE2E2',subs:[
     {id:'6-1',title:'構造関連の不明点',fields:[
-      {no:105,key:'structuralIssues',lbl:'構造関連の不明点',req:true,type:'a',hint:'屋根材の経年劣化／構造計算書の有無／補強要否'},
-      {no:106,key:'waterproofWarranty',lbl:'屋根防水の保証残期間',req:false,type:'n',unit:'年',hint:'PV施工で保証が切れる可能性'},
-      {no:107,key:'asbestos',lbl:'アスベスト含有の可能性',req:false,type:'s',opts:['有（調査済）','無（調査済）','要調査'],hint:'築古スレート屋根は要事前調査'},
+      {no:107,key:'structuralIssues',lbl:'構造関連の不明点',req:true,type:'a',hint:'屋根材の経年劣化／構造計算書の有無／補強要否'},
+      {no:108,key:'waterproofWarranty',lbl:'屋根防水の保証残期間',req:false,type:'n',unit:'年',hint:'PV施工で保証が切れる可能性'},
+      {no:109,key:'asbestos',lbl:'アスベスト含有の可能性',req:false,type:'s',opts:['有（調査済）','無（調査済）','要調査'],hint:'築古スレート屋根は要事前調査'},
     ]},
     {id:'6-2',title:'法規制・許認可',fields:[
-      {no:108,key:'zoningUse',lbl:'用途地域',req:true,type:'t',hint:'建築基準法上の用途地域'},
-      {no:109,key:'heightFireZone',lbl:'高度地区・防火地域',req:false,type:'t',hint:'防火・準防火地域→屋根の防火性能が必要'},
-      {no:110,key:'landscapeOrd',lbl:'景観条例の適用',req:false,type:'s',opts:['有','無'],hint:'色彩・形状制限の有無'},
-      {no:111,key:'elecActNotice',lbl:'電気事業法 上の届出',req:true,type:'t',hint:'50kW以上は保安規程・主任技術者選任要'},
-      {no:112,key:'buildingPermit',lbl:'建築確認申請の要否',req:false,type:'s',opts:['必要','不要'],hint:'工作物として4m超・10kW超は要確認'},
+      {no:110,key:'zoningUse',lbl:'用途地域',req:true,type:'t',hint:'建築基準法上の用途地域'},
+      {no:111,key:'heightFireZone',lbl:'高度地区・防火地域',req:false,type:'t',hint:'防火・準防火地域→屋根の防火性能が必要'},
+      {no:112,key:'landscapeOrd',lbl:'景観条例の適用',req:false,type:'s',opts:['有','無'],hint:'色彩・形状制限の有無'},
+      {no:113,key:'elecActNotice',lbl:'電気事業法 上の届出',req:true,type:'t',hint:'50kW以上は保安規程・主任技術者選任要'},
+      {no:114,key:'buildingPermit',lbl:'建築確認申請の要否',req:false,type:'s',opts:['必要','不要'],hint:'工作物として4m超・10kW超は要確認'},
     ]},
     {id:'6-3',title:'スケジュール・コスト',fields:[
-      {no:113,key:'scheduleConstraint',lbl:'スケジュール上の制約',req:true,type:'t',hint:'決算期／補助金期限／税制優遇'},
-      {no:114,key:'constructionPeriod',lbl:'希望工期',req:false,type:'t',unit:'ヶ月',hint:'実工事のみ（設計・申請期間は別途）'},
-      {no:115,key:'budget',lbl:'投資予算の上限',req:true,type:'n',unit:'万円',hint:'稟議承認済みの上限額'},
-      {no:116,key:'paybackYears',lbl:'目標回収年数',req:false,type:'n',unit:'年',hint:'一般的には7〜12年'},
-      {no:117,key:'targetIrr',lbl:'目標IRR',req:false,type:'n',unit:'%',hint:'施主のハードルレート'},
-      {no:118,key:'subsidy',lbl:'補助金・税制優遇の活用',req:false,type:'t',hint:'活用予定の制度名・申請ステータス'},
+      {no:115,key:'scheduleConstraint',lbl:'スケジュール上の制約',req:true,type:'t',hint:'決算期／補助金期限／税制優遇'},
+      {no:116,key:'constructionPeriod',lbl:'希望工期',req:false,type:'t',unit:'ヶ月',hint:'実工事のみ（設計・申請期間は別途）'},
+      {no:117,key:'budget',lbl:'投資予算の上限',req:true,type:'n',unit:'万円',hint:'稟議承認済みの上限額'},
+      {no:118,key:'paybackYears',lbl:'目標回収年数',req:false,type:'n',unit:'年',hint:'一般的には7〜12年'},
+      {no:119,key:'targetIrr',lbl:'目標IRR',req:false,type:'n',unit:'%',hint:'施主のハードルレート'},
+      {no:120,key:'subsidy',lbl:'補助金・税制優遇の活用',req:false,type:'t',hint:'活用予定の制度名・申請ステータス'},
     ]},
     {id:'6-4',title:'その他懸念事項',fields:[
-      {no:119,key:'neighborImpact',lbl:'周辺住民への影響',req:false,type:'t',hint:'反射光・騒音・景観等の懸念'},
-      {no:120,key:'futurePlan',lbl:'将来計画との整合',req:false,type:'t',hint:'屋根改修・建物増改築・事業転換の予定'},
-      {no:121,key:'approvalStatus',lbl:'施主社内での承認状況',req:true,type:'t',hint:'稟議の進捗状況。意思決定までのリードタイム把握'},
-      {no:122,key:'competitorStatus',lbl:'競合状況',req:false,type:'t',hint:'他社見積の有無・進捗'},
-      {no:123,key:'otherNotes',lbl:'その他特記事項',req:false,type:'a',hint:'上記以外で設計判断に影響する情報'},
+      {no:121,key:'neighborImpact',lbl:'周辺住民への影響',req:false,type:'t',hint:'反射光・騒音・景観等の懸念'},
+      {no:122,key:'futurePlan',lbl:'将来計画との整合',req:false,type:'t',hint:'屋根改修・建物増改築・事業転換の予定'},
+      {no:123,key:'approvalStatus',lbl:'施主社内での承認状況',req:true,type:'t',hint:'稟議の進捗状況。意思決定までのリードタイム把握'},
+      {no:124,key:'competitorStatus',lbl:'競合状況',req:false,type:'t',hint:'他社見積の有無・進捗'},
+      {no:125,key:'otherNotes',lbl:'その他特記事項',req:false,type:'a',hint:'上記以外で設計判断に影響する情報'},
     ]},
   ]},
 ];
@@ -572,7 +574,7 @@ function dashboardHtml(){
           </select>
         </div>
         <div class="meta-item" style="grid-column:1/-1"><label>伝達事項</label><textarea rows="4" placeholder="ここに双方の伝達事項を記入" oninput="handleMeta('memo',this.value)">${esc(metaState.memo||'')}</textarea></div>
-        <div class="meta-item drawing-url-wrap" style="grid-column:1/-1"><label class="lbl-drawing">📁 図面格納先URL</label><div style="display:flex;gap:8px;align-items:center"><input class="drawing-url-input" type="url" id="drawingUrl-input" value="${esc(metaState.drawingUrl||'')}" placeholder="https://drive.google.com/..." oninput="handleMeta('drawingUrl',this.value);updateDrawingLink()"><a class="btn-link btn-link-drawing${metaState.drawingUrl?'':' disabled'}" id="drawing-link" href="${esc(metaState.drawingUrl||'#')}" target="_blank" rel="noopener noreferrer" onclick="if(!metaState.drawingUrl){event.preventDefault();}">🔗 リンクを開く</a></div></div>
+        <div class="meta-item drawing-url-wrap" style="grid-column:1/-1"><label class="lbl-drawing">📁 図面格納先URL</label><div style="display:flex;gap:6px;align-items:center;width:100%;box-sizing:border-box"><input class="drawing-url-input" type="url" id="drawingUrl-input" value="${esc(metaState.drawingUrl||'')}" placeholder="https://drive.google.com/..." oninput="handleMeta('drawingUrl',this.value);updateDrawingLink()"><button class="btn-link btn-link-drawing${metaState.drawingUrl?'':' disabled'}" id="drawing-link" type="button" onclick="var u=metaState.drawingUrl||'';if(u){window.open(u,'_blank');}">🔗 リンクを開く</button></div></div>
       </div>
     </div>
     <div class="dash-card">
@@ -602,7 +604,7 @@ function dashboardHtml(){
 
 function checklistHtml(){
   const checks=[
-    {title:'①基本情報',keys:['facilityName','address','buildingUse','buildingAge','clientContact','clientPhone','techContact','utilityCompany','contractType','electricRate']},
+    {title:'①基本情報',keys:['facilityName','address','buildingUse','buildingAge','clientContact','clientPhone','techContact','gridOperator','utilityCompany','contractType','electricRate','maxDemandPower']},
     {title:'②屋根・設置条件',keys:['roofShape','roofMaterial','mountingFrame','roofFaces','roofTotalArea','pvEffArea','azimuth','roofSlope','roofObstacles','shadowSources','snowDepth','windSpeed','roughnessClass','buildingHeight','structuralCalc','allowableLoad']},
     {title:'③電気条件',keys:['poleNum','receptionMethod','receptionVoltage','contractPower','receptionPoint','transformerCapSingle','transformerCapThree','maxDemand','avgDemand','annualUsage','data30min','operatingPattern','connectionPoint','simpleStudy','gridConsult','appStatus','singleLineDiag']},
     {title:'④太陽光設備条件（重要）',keys:['pvCapacity','panelSpec','panelCount','pcsPhase','pcsModel','pcsConfig','pcsRatedOutput','pcsLocation','monitorDevice','monitorAccessory','smartMeter','reverseFlow','rprRequired','protectRelay','zpd','selfConsumTarget','batteryPresent','standAlone','specificLoad']},
@@ -711,7 +713,7 @@ function syncAndpadId(val){
 function updateDrawingLink(){
   const lnk=document.getElementById('drawing-link');
   const u=metaState.drawingUrl||'';
-  if(lnk){if(u){lnk.href=u;lnk.classList.remove('disabled');}else{lnk.removeAttribute('href');lnk.classList.add('disabled');}}
+  if(lnk){if(u){lnk.classList.remove('disabled');}else{lnk.classList.add('disabled');}}
 }
 function multiGetVals(key){
   const wrap=document.getElementById('multi-'+key);
@@ -874,46 +876,39 @@ function showToast(msg, ok){
 // ============================================================
 // GAS スプレッドシート送信
 // ============================================================
-function buildSpreadsheetPayload(){
+function buildSpreadsheetPayload() {
   const headers = [];
   const values = [];
-  headers.push('送信日時');
-  values.push(new Date().toLocaleString('ja-JP'));
-  headers.push('ANDPADシステムID');
-  values.push(extractAndpadId(getVal('andpadId'))||'');
-  headers.push('ANDPADのURL');
-  values.push(getVal('andpadUrl')||'');
-  headers.push('作成日');
-  values.push(metaState.createdDate||'');
-  headers.push('記入者');
-  values.push(metaState.lastEditor||'');
-  headers.push('伝達事項');
-  values.push(metaState.memo||'');
-  headers.push('図面格納先URL');
-  values.push(metaState.drawingUrl||'');
-  headers.push('進捗');
-  values.push(metaState.progress||'');
-  SEC.forEach(sec=>{
-    sec.subs.forEach(sub=>{
-      sub.fields.forEach(f=>{
-        if(f.key==='andpadId'||f.key==='andpadUrl') return;
-        const label = 'No.'+(f.no==='*'?'-':f.no)+' '+f.lbl;
+
+  headers.push('送信日時', 'ANDPADシステムID', 'ANDPADのURL', '作成日', '記入者', '伝達事項', '進捗', '図面格納先URL');
+  values.push(
+    new Date().toLocaleString('ja-JP'),
+    extractAndpadId(getVal('andpadId')) || '',
+    getVal('andpadUrl') || '',
+    metaState.createdDate || '',
+    metaState.lastEditor || '',
+    metaState.memo || '',
+    metaState.progress || '記入中',
+    metaState.drawingUrl || ''
+  );
+
+  SEC.forEach(sec => {
+    sec.subs.forEach(sub => {
+      sub.fields.forEach(f => {
+        if (f.key === 'andpadId' || f.key === 'andpadUrl') return;
+        const label = 'No.' + (f.no === '*' ? '-' : f.no) + ' ' + f.lbl;
         headers.push(label);
-        if(f.type==='multi'){
-          const live=multiGetVals(f.key).filter(v=>v!=='');
-          values.push(live.length?live.join(', '):(getVal(f.key)||''));
+        if (f.type === 'multi') {
+          const live = multiGetVals(f.key).filter(v => v !== '');
+          values.push(live.length ? live.join(', ') : (getVal(f.key) || ''));
         } else {
-          values.push(getVal(f.key));
+          values.push(getVal(f.key) || '');
         }
       });
     });
   });
-  return {
-    headers: headers,
-    values: values,
-    andpadId: extractAndpadId(getVal('andpadId'))||'',
-    facilityName: getVal('facilityName')||''
-  };
+
+  return { headers, values };
 }
 
 function sendToGAS(){
