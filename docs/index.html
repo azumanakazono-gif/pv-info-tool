@@ -876,18 +876,21 @@ function showToast(msg, ok){
 // ============================================================
 // GAS スプレッドシート送信
 // ============================================================
-function buildSpreadsheetPayload(){
+function buildSpreadsheetPayload() {
   const headers = [];
   const values = [];
 
-  headers.push('送信日時');        values.push(new Date().toLocaleString('ja-JP'));
-  headers.push('ANDPADシステムID'); values.push(extractAndpadId(getVal('andpadId'))||'');
-  headers.push('ANDPADのURL');     values.push(getVal('andpadUrl')||'');
-  headers.push('作成日');          values.push(metaState.createdDate||'');
-  headers.push('記入者');          values.push(metaState.lastEditor||'');
-  headers.push('伝達事項');        values.push(metaState.memo||'');
-  headers.push('進捗');            values.push(metaState.progress||'');
-  headers.push('図面格納先URL');    values.push(metaState.drawingUrl||'');
+  headers.push('送信日時', 'ANDPADシステムID', 'ANDPADのURL', '作成日', '記入者', '伝達事項', '進捗', '図面格納先URL');
+  values.push(
+    new Date().toLocaleString('ja-JP'),
+    extractAndpadId(getVal('andpadId')) || '',
+    getVal('andpadUrl') || '',
+    metaState.createdDate || '',
+    metaState.lastEditor || '',
+    metaState.memo || '',
+    metaState.progress || '記入中',
+    metaState.drawingUrl || ''
+  );
 
   SEC.forEach(sec => {
     sec.subs.forEach(sub => {
@@ -899,18 +902,13 @@ function buildSpreadsheetPayload(){
           const live = multiGetVals(f.key).filter(v => v !== '');
           values.push(live.length ? live.join(', ') : (getVal(f.key) || ''));
         } else {
-          values.push(getVal(f.key));
+          values.push(getVal(f.key) || '');
         }
       });
     });
   });
 
-  return {
-    headers: headers,
-    values: values,
-    andpadId: extractAndpadId(getVal('andpadId'))||'',
-    facilityName: getVal('facilityName')||''
-  };
+  return { headers, values };
 }
 
 function sendToGAS(){
