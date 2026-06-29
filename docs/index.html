@@ -780,23 +780,22 @@ function doExport(){
 }
 function loadFromGAS(){
   const btn=document.getElementById('btn-load');
-  const id=extractAndpadId(getVal('andpadId'));
+  const input=prompt('ANDPADシステムIDを入力してください（空白ならJSONファイル読込）');
+  if(input===null) return;
+  const id=input.trim();
   if(!id){
-    showToast('ANDPADシステムIDを入力してから読込してください',false);
+    loadFromFile();
     return;
   }
   if(btn){btn.disabled=true;btn.textContent='📂 読込中…';}
-  fetch(GAS_URL,{
-    method:'POST',
-    redirect:'follow',
-    headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify({action:'load',andpadId:id})
+  fetch(GAS_URL+'?id='+encodeURIComponent(id),{
+    method:'GET',
+    redirect:'follow'
   }).then(r=>{
     if(!r.ok) throw new Error('HTTP '+r.status);
     return r.json();
-  }).then(res=>{
-    if(res.status!=='success') throw new Error(res.message||'データが見つかりません');
-    restoreFromSheet(res.data);
+  }).then(data=>{
+    restoreFromSheet(data);
     showToast('スプレッドシートからデータを復元しました',true);
   }).catch(err=>{
     showToast('読込失敗: '+err.message,false);
@@ -804,22 +803,51 @@ function loadFromGAS(){
     if(btn){btn.disabled=false;btn.textContent='📂 読込';}
   });
 }
+function loadFromFile(){
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='.json';
+  inp.onchange=e=>{
+    const file=e.target.files[0];
+    if(!file) return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      try{
+        const parsed=JSON.parse(ev.target.result);
+        if(parsed.data){
+          state={...parsed.data};
+          if(parsed._meta) metaState={...metaState,...parsed._meta};
+        } else {
+          state={...parsed};
+        }
+        saveState();renderApp();updateProgress();
+        showToast('JSONファイルからデータを読み込みました',true);
+      }catch(err){showToast('読み込みエラー: '+err.message,false);}
+    };
+    reader.readAsText(file);
+  };
+  inp.click();
+}
 function restoreFromSheet(data){
   const metaLabelMap={
+    'ANDPADシステムID':'andpadId',
+    'ANDPAD案件名':'facilityName',
     '作成日':'createdDate','記入者':'lastEditor','進捗':'progress',
     '伝達事項':'memo','図面格納先URL':'drawingUrl'
   };
-  const fieldLabelMap={};
+  const lblToField={};
   SEC.forEach(s=>s.subs.forEach(sub=>sub.fields.forEach(f=>{
-    const label='No.'+(f.no==='*'?'-':f.no)+' '+f.lbl;
-    fieldLabelMap[label]=f;
+    lblToField[f.lbl]=f;
   })));
   Object.keys(data).forEach(label=>{
     const val=data[label]!=null?String(data[label]):'';
-    if(label==='ANDPADシステムID'){state['andpadId']=val;return;}
-    if(label==='ANDPADのURL'){state['andpadUrl']=val;return;}
-    if(metaLabelMap[label]){metaState[metaLabelMap[label]]=val;return;}
-    const f=fieldLabelMap[label];
+    if(label==='送信日時') return;
+    if(metaLabelMap[label]){
+      const mk=metaLabelMap[label];
+      if(mk==='andpadId'||mk==='facilityName') state[mk]=val;
+      else metaState[mk]=val;
+      return;
+    }
+    const f=lblToField[label];
     if(f) state[f.key]=val;
   });
   saveState();
