@@ -850,6 +850,7 @@ function doExport(){
   URL.revokeObjectURL(url);
 }
 
+
 function closeModal(){document.getElementById('modal-root').innerHTML='';}
 function confirmClear(){
   document.getElementById('modal-root').innerHTML=`
@@ -883,6 +884,14 @@ function extractAndpadId(val){
   return val.replace(/\s/g,'');
 }
 
+<<<<<<< HEAD
+=======
+// ============================================================
+// EXPORT TO GOOGLE SPREADSHEET (via GAS)
+// ============================================================
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxtDgUYNHrTS4ng_2kVkKqFjnXqE2O1qctw85pq929hPzGBUpUOLn-epmBsoSQVpeUu/exec';
+
+>>>>>>> origin/main
 function showToast(msg, ok){
   const el = document.createElement('div');
   el.className = 'toast ' + (ok ? 'toast-ok' : 'toast-ng');
@@ -895,6 +904,7 @@ function showToast(msg, ok){
 // GAS スプレッドシート送信 (POST)
 // ============================================================
 function buildSpreadsheetPayload() {
+<<<<<<< HEAD
   const headers = [];
   const values = [];
 
@@ -909,10 +919,23 @@ function buildSpreadsheetPayload() {
     metaState.progress || '記入中',
     metaState.drawingUrl || ''
   );
+=======
+  const payload = {};
+
+  payload['送信日時'] = new Date().toLocaleString('ja-JP');
+  payload['ANDPADシステムID'] = extractAndpadId(getVal('andpadId')) || '';
+  payload['ANDPAD案件名'] = getVal('facilityName') || '';
+  payload['記入者'] = metaState.lastEditor || '';
+  payload['作成日'] = metaState.createdDate || '';
+  payload['進捗'] = metaState.progress || '記入中';
+  payload['伝達事項'] = metaState.memo || '';
+  payload['図面格納先URL'] = metaState.drawingUrl || '';
+>>>>>>> origin/main
 
   SEC.forEach(sec => {
     sec.subs.forEach(sub => {
       sub.fields.forEach(f => {
+<<<<<<< HEAD
         if (f.key === 'andpadId' || f.key === 'andpadUrl') return;
         const label = 'No.' + (f.no === '*' ? '-' : f.no) + ' ' + f.lbl;
         headers.push(label);
@@ -921,33 +944,55 @@ function buildSpreadsheetPayload() {
           values.push(live.length ? live.join(', ') : (getVal(f.key) || ''));
         } else {
           values.push(getVal(f.key) || '');
+=======
+        if (f.key === 'andpadId' || f.key === 'facilityName') return;
+        if (f.type === 'multi') {
+          const live = multiGetVals(f.key).filter(v => v !== '');
+          payload[f.lbl] = live.length ? live.join(', ') : (getVal(f.key) || '');
+        } else {
+          payload[f.lbl] = getVal(f.key) || '';
+>>>>>>> origin/main
         }
       });
     });
   });
 
+<<<<<<< HEAD
   return { headers, values };
+=======
+  return payload;
+>>>>>>> origin/main
 }
 
-function sendToGAS(){
+function sendToGAS() {
   const btn = document.getElementById('btn-sheet');
   if (!btn || btn.disabled) return;
   btn.disabled = true;
   btn.textContent = '📊 送信中…';
+
   const payload = buildSpreadsheetPayload();
+<<<<<<< HEAD
   fetch(GAS_SEND_URL, {
+=======
+
+  fetch(GAS_URL, {
+>>>>>>> origin/main
     method: 'POST',
     redirect: 'follow',
-    headers: {'Content-Type': 'text/plain'},
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(payload)
-  }).then(r=>{
-    if(!r.ok) throw new Error('HTTP '+r.status);
+  })
+  .then(r => {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.text();
-  }).then(()=>{
+  })
+  .then(() => {
     showToast('スプレッドシートへの送信が完了しました', true);
-  }).catch(err=>{
+  })
+  .catch(err => {
     showToast('送信に失敗しました: ' + err.message, false);
-  }).finally(()=>{
+  })
+  .finally(() => {
     btn.disabled = false;
     btn.textContent = '📊 スプレッドシートに送信';
   });
