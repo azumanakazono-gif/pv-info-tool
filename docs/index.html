@@ -877,240 +877,61 @@ function showToast(msg, ok){
 // GAS スプレッドシート送信
 // ============================================================
 function buildSpreadsheetPayload() {
-  document.querySelectorAll('[data-key]').forEach(el => {
-    const k = el.dataset.key;
-    const v = el.value;
-    if (v !== undefined && v !== '') state[k] = v;
+  const payload = {};
+
+  payload['送信日時'] = new Date().toLocaleString('ja-JP');
+  payload['ANDPADシステムID'] = extractAndpadId(getVal('andpadId')) || '';
+  payload['ANDPAD案件名'] = getVal('facilityName') || '';
+  payload['記入者'] = metaState.lastEditor || '';
+  payload['作成日'] = metaState.createdDate || '';
+  payload['進捗'] = metaState.progress || '記入中';
+  payload['伝達事項'] = metaState.memo || '';
+  payload['図面格納先URL'] = metaState.drawingUrl || '';
+
+  SEC.forEach(sec => {
+    sec.subs.forEach(sub => {
+      sub.fields.forEach(f => {
+        if (f.key === 'andpadId' || f.key === 'facilityName') return;
+        if (f.type === 'multi') {
+          const live = multiGetVals(f.key).filter(v => v !== '');
+          payload[f.lbl] = live.length ? live.join(', ') : (getVal(f.key) || '');
+        } else {
+          payload[f.lbl] = getVal(f.key) || '';
+        }
+      });
+    });
   });
-  document.querySelectorAll('.multi-row input').forEach(el => {
-    const row = el.closest('[data-key]') || el.closest('.multi-wrap');
-    if (row) {
-      const k = row.dataset ? row.dataset.key : null;
-      if (k && el.value) state[k] = el.value;
-    }
-  });
 
-  const g = k => getVal(k) || '';
-  const mg = k => { const v = multiGetVals(k).filter(x => x !== ''); return v.length ? v.join(', ') : g(k); };
-
-  const fieldMap = {};
-  SEC.forEach(sec => sec.subs.forEach(sub => sub.fields.forEach(f => { fieldMap[f.key] = f; })));
-  const fLabel = key => {
-    const f = fieldMap[key];
-    if (!f) return key;
-    return 'No.' + (f.no === '*' ? '-' : f.no) + ' ' + f.lbl;
-  };
-
-  const rows = [
-    /*  1*/ ['送信日時',                        new Date().toLocaleString('ja-JP')],
-    /*  2*/ ['作成日',                          metaState.createdDate || ''],
-    /*  3*/ ['記入者',                          metaState.lastEditor || ''],
-    /*  4*/ ['ANDPADシステムID',                extractAndpadId(g('andpadId')) || ''],
-    /*  5*/ [fLabel('facilityName'),            g('facilityName')],
-    /*  6*/ ['進捗',                            metaState.progress || '記入中'],
-    /*  7*/ ['伝達事項',                        metaState.memo || ''],
-    /*  8*/ ['図面格納先URL',                    metaState.drawingUrl || ''],
-    /*  9*/ [fLabel('address'),                 g('address')],
-    /* 10*/ [fLabel('latLng'),                  g('latLng')],
-    /* 11*/ [fLabel('buildingUse'),             g('buildingUse')],
-    /* 12*/ [fLabel('buildingAge'),             g('buildingAge')],
-    /* 13*/ [fLabel('startTarget'),             g('startTarget')],
-    /* 14*/ [fLabel('clientContact'),           g('clientContact')],
-    /* 15*/ [fLabel('clientPhone'),             g('clientPhone')],
-    /* 16*/ [fLabel('techContact'),             g('techContact')],
-    /* 17*/ [fLabel('projectMgr'),              g('projectMgr')],
-    /* 18*/ [fLabel('gridOperator'),            g('gridOperator')],
-    /* 19*/ [fLabel('utilityCompany'),          g('utilityCompany')],
-    /* 20*/ [fLabel('contractType'),            g('contractType')],
-    /* 21*/ [fLabel('maxDemandPower'),          g('maxDemandPower')],
-    /* 22*/ [fLabel('electricRate'),            g('electricRate')],
-    /* 23*/ [fLabel('roofShape'),               g('roofShape')],
-    /* 24*/ [fLabel('roofMaterial'),            g('roofMaterial')],
-    /* 25*/ [fLabel('mountingFrame'),           g('mountingFrame')],
-    /* 26*/ [fLabel('roofFaces'),               g('roofFaces')],
-    /* 27*/ [fLabel('roofTotalArea'),           g('roofTotalArea')],
-    /* 28*/ [fLabel('pvEffArea'),               g('pvEffArea')],
-    /* 29*/ [fLabel('azimuth'),                 g('azimuth')],
-    /* 30*/ [fLabel('roofSlope'),               g('roofSlope')],
-    /* 31*/ [fLabel('roofObstacles'),           g('roofObstacles')],
-    /* 32*/ [fLabel('shadowSources'),           g('shadowSources')],
-    /* 33*/ [fLabel('edgeClearance'),           g('edgeClearance')],
-    /* 34*/ [fLabel('snowDepth'),               g('snowDepth')],
-    /* 35*/ [fLabel('windSpeed'),               g('windSpeed')],
-    /* 36*/ [fLabel('roughnessClass'),          g('roughnessClass')],
-    /* 37*/ [fLabel('buildingHeight'),          g('buildingHeight')],
-    /* 38*/ [fLabel('importanceFactor'),        g('importanceFactor')],
-    /* 39*/ [fLabel('structuralCalc'),          g('structuralCalc')],
-    /* 40*/ [fLabel('panelLoadEstimate'),       g('panelLoadEstimate')],
-    /* 41*/ [fLabel('allowableLoad'),           g('allowableLoad')],
-    /* 42*/ [fLabel('poleNum'),                 g('poleNum')],
-    /* 43*/ [fLabel('receptionMethod'),         g('receptionMethod')],
-    /* 44*/ [fLabel('receptionVoltage'),        g('receptionVoltage')],
-    /* 45*/ [fLabel('contractPower'),           g('contractPower')],
-    /* 46*/ [fLabel('receptionPoint'),          g('receptionPoint')],
-    /* 47*/ [fLabel('transformerCapSingle'),    mg('transformerCapSingle')],
-    /* 48*/ [fLabel('transformerCapThree'),     mg('transformerCapThree')],
-    /* 49*/ [fLabel('transformerLoad'),         g('transformerLoad')],
-    /* 50*/ [fLabel('maxDemand'),               g('maxDemand')],
-    /* 51*/ [fLabel('avgDemand'),               g('avgDemand')],
-    /* 52*/ [fLabel('annualUsage'),             g('annualUsage')],
-    /* 53*/ [fLabel('data30min'),               g('data30min')],
-    /* 54*/ [fLabel('operatingPattern'),        g('operatingPattern')],
-    /* 55*/ [fLabel('seasonalChange'),          g('seasonalChange')],
-    /* 56*/ [fLabel('connectionPoint'),         g('connectionPoint')],
-    /* 57*/ [fLabel('simpleStudy'),             g('simpleStudy')],
-    /* 58*/ [fLabel('gridConsult'),             g('gridConsult')],
-    /* 59*/ [fLabel('appStatus'),               g('appStatus')],
-    /* 60*/ [fLabel('gridWorkCost'),            g('gridWorkCost')],
-    /* 61*/ [fLabel('singleLineDiag'),          g('singleLineDiag')],
-    /* 62*/ [fLabel('relaySettings'),           g('relaySettings')],
-    /* 63*/ [fLabel('powerFactor'),             g('powerFactor')],
-    /* 64*/ [fLabel('harmonics'),               g('harmonics')],
-    /* 65*/ [fLabel('pvCapacity'),              g('pvCapacity')],
-    /* 66*/ [fLabel('annualGenTarget'),         g('annualGenTarget')],
-    /* 67*/ [fLabel('panelSpec'),               g('panelSpec')],
-    /* 68*/ [fLabel('panelCount'),              g('panelCount')],
-    /* 69*/ [fLabel('pcsPhase'),                g('pcsPhase')],
-    /* 70*/ [fLabel('pcsModel'),                g('pcsModel')],
-    /* 71*/ [fLabel('pcsConfig'),               g('pcsConfig')],
-    /* 72*/ [fLabel('pcsRatedOutput'),          g('pcsRatedOutput')],
-    /* 73*/ [fLabel('pcsLocation'),             g('pcsLocation')],
-    /* 74*/ [fLabel('monitorDevice'),           g('monitorDevice')],
-    /* 75*/ [fLabel('monitorAccessory'),        g('monitorAccessory')],
-    /* 76*/ [fLabel('smartMeter'),              g('smartMeter')],
-    /* 77*/ [fLabel('reverseFlow'),             g('reverseFlow')],
-    /* 78*/ [fLabel('rprRequired'),             g('rprRequired')],
-    /* 79*/ [fLabel('protectRelay'),            g('protectRelay')],
-    /* 80*/ [fLabel('zpd'),                     g('zpd')],
-    /* 81*/ [fLabel('selfConsumTarget'),        g('selfConsumTarget')],
-    /* 82*/ [fLabel('batteryPresent'),          g('batteryPresent')],
-    /* 83*/ [fLabel('batteryCap'),              g('batteryCap')],
-    /* 84*/ [fLabel('standAlone'),              g('standAlone')],
-    /* 85*/ [fLabel('specificLoad'),            g('specificLoad')],
-    /* 86*/ [fLabel('load1Name'),               g('load1Name')],
-    /* 87*/ [fLabel('load1Cap'),                g('load1Cap')],
-    /* 88*/ [fLabel('load1Phase'),              g('load1Phase')],
-    /* 89*/ [fLabel('load1Priority'),           g('load1Priority')],
-    /* 90*/ [fLabel('load2Name'),               g('load2Name')],
-    /* 91*/ [fLabel('load2Cap'),                g('load2Cap')],
-    /* 92*/ [fLabel('load2Phase'),              g('load2Phase')],
-    /* 93*/ [fLabel('load2Priority'),           g('load2Priority')],
-    /* 94*/ [fLabel('load3Name'),               g('load3Name')],
-    /* 95*/ [fLabel('load3Cap'),                g('load3Cap')],
-    /* 96*/ [fLabel('load3Phase'),              g('load3Phase')],
-    /* 97*/ [fLabel('load3Priority'),           g('load3Priority')],
-    /* 98*/ [fLabel('totalSpecLoad'),           g('totalSpecLoad')],
-    /* 99*/ ['補助金・法規関連備考',              g('subsidyLegalRemarks')],
-    /*100*/ [fLabel('distFromYard'),            g('distFromYard')],
-    /*101*/ [fLabel('accessRoad'),              g('accessRoad')],
-    /*102*/ [fLabel('largeVehicle'),            g('largeVehicle')],
-    /*103*/ [fLabel('cranePlan'),               g('cranePlan')],
-    /*104*/ [fLabel('accessConstraints'),       g('accessConstraints')],
-    /*105*/ [fLabel('scaffolding'),             g('scaffolding')],
-    /*106*/ [fLabel('workHours'),               g('workHours')],
-    /*107*/ [fLabel('noiseRestrict'),           g('noiseRestrict')],
-    /*108*/ [fLabel('utilities'),               g('utilities')],
-    /*109*/ [fLabel('localContractor'),         g('localContractor')],
-    /*110*/ [fLabel('accommodation'),           g('accommodation')],
-    /*111*/ [fLabel('accommodationInfo'),       g('accommodationInfo')],
-    /*112*/ [fLabel('busySeason'),              g('busySeason')],
-    /*113*/ [fLabel('saltDamage'),              g('saltDamage')],
-    /*114*/ [fLabel('heavySnow'),               g('heavySnow')],
-    /*115*/ [fLabel('workablePeriod'),          g('workablePeriod')],
-    /*116*/ [fLabel('structuralIssues'),        g('structuralIssues')],
-    /*117*/ [fLabel('waterproofWarranty'),      g('waterproofWarranty')],
-    /*118*/ [fLabel('asbestos'),                g('asbestos')],
-    /*119*/ [fLabel('zoningUse'),               g('zoningUse')],
-    /*120*/ [fLabel('heightFireZone'),          g('heightFireZone')],
-    /*121*/ [fLabel('landscapeOrd'),            g('landscapeOrd')],
-    /*122*/ [fLabel('elecActNotice'),           g('elecActNotice')],
-    /*123*/ [fLabel('buildingPermit'),          g('buildingPermit')],
-    /*124*/ [fLabel('scheduleConstraint'),      g('scheduleConstraint')],
-    /*125*/ [fLabel('constructionPeriod'),      g('constructionPeriod')],
-    /*126*/ [fLabel('budget'),                  g('budget')],
-    /*127*/ [fLabel('paybackYears'),            g('paybackYears')],
-    /*128*/ [fLabel('targetIrr'),               g('targetIrr')],
-    /*129*/ [fLabel('subsidy'),                 g('subsidy')],
-    /*130*/ [fLabel('neighborImpact'),          g('neighborImpact')],
-    /*131*/ [fLabel('futurePlan'),              g('futurePlan')],
-    /*132*/ [fLabel('approvalStatus'),          g('approvalStatus')],
-    /*133*/ [fLabel('competitorStatus'),        g('competitorStatus')],
-    /*134*/ [fLabel('otherNotes'),              g('otherNotes')],
-  ];
-
-  return { headers: rows.map(r => r[0]), values: rows.map(r => r[1]) };
+  return payload;
 }
 
 function sendToGAS() {
-  const btn = document.querySelector('button[onclick="sendToGAS()"]') || document.querySelector('.btn-success');
-  if (btn && btn.disabled) return;
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = '📊 送信中…';
-  }
+  const btn = document.getElementById('btn-sheet');
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = '📊 送信中…';
 
-  const payload = {
-    'andpadid': getVal('andpadId'),
-    'andpad案件url': getVal('andpadUrl'),
-    'andpad案件名': getVal('facilityName'),
-    '所在地住所': getVal('address'),
-    '顧客名': getVal('clientName'),
-    '担当者名': getVal('assignedPerson'),
-    '図面格納先url': getVal('drawingUrl'),
-    '連系予定日': getVal('gridConnectionDate'),
-    '電力会社': getVal('powerCompany'),
-    '電力営業所': getVal('powerOffice'),
-    '電力顧客番号': getVal('powerCustomerNumber'),
-    '電力契約名義': getVal('powerContractName'),
-    '供給地点特定番号': getVal('supplyPointNumber'),
-    '既存契約プラン': getVal('existingPlan'),
-    '新契約プラン': getVal('newPlan'),
-    '契約容量a': getVal('contractAmperage'),
-    '契約容量kvakw': getVal('contractKva'),
-    '契約番号': getVal('contractNumber'),
-    '単線結線図': getVal('singleLineDiagram'),
-    '引込位置等指示図': getVal('dropPositionDiagram'),
-    '配置図': getVal('layoutDiagram'),
-    '平面図立面図': getVal('floorPlan'),
-    '屋根伏図': getVal('roofPlan'),
-    '構造計算書': getVal('structuralCalculation'),
-    'その他添付書類': getVal('otherDocuments'),
-    '太陽光メーカー第一希望': document.getElementById('panelManufacturer_1')?.value || getVal('panelManufacturer1'),
-    '太陽光メーカー第二希望': document.getElementById('panelManufacturer_2')?.value || getVal('panelManufacturer2'),
-    '蓄電池メーカー第一希望': document.getElementById('storageManufacturer_1')?.value || getVal('storageManufacturer1'),
-    '蓄電池メーカー第二希望': document.getElementById('storageManufacturer_2')?.value || getVal('storageManufacturer2'),
-    'パワコン設置希望場所': getVal('pcsLocation'),
-    '蓄電池設置希望場所': getVal('storageLocation'),
-    '施工制約': getVal('constructionConstraints'),
-    '搬入経路': getVal('deliveryRoute'),
-    '重機スペース': getVal('heavyEquipmentSpace'),
-    '足場必要性': getVal('scaffoldRequired'),
-    '塩害地域': getVal('saltDamage'),
-    '積雪地域': getVal('snowRegion'),
-    '基準風速': getVal('referenceWindSpeed'),
-    '地表面粗度区分': getVal('roughnessCategory'),
-    'その他特記事項': getVal('otherRemarks')
-  };
+  const payload = buildSpreadsheetPayload();
 
   fetch(GAS_URL, {
     method: 'POST',
+    redirect: 'follow',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(payload)
   })
-  .then(() => {
-    alert('📊 スプレッドシートへの送信処理が完了しました！');
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = '📊 スプレッドシートに送信';
-    }
+  .then(r => {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.text();
   })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('❌ 送信に失敗しました。');
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = '📊 スプレッドシートに送信';
-    }
+  .then(() => {
+    showToast('スプレッドシートへの送信が完了しました', true);
+  })
+  .catch(err => {
+    showToast('送信に失敗しました: ' + err.message, false);
+  })
+  .finally(() => {
+    btn.disabled = false;
+    btn.textContent = '📊 スプレッドシートに送信';
   });
 }
 
