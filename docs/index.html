@@ -654,13 +654,12 @@ function dashboardHtml(){
       </div>
     </div>
     <div class="dash-card">
-      <h3>📁 GitHub保存ガイド</h3>
+      <h3>💡 使用説明</h3>
       <div style="font-size:11px;color:var(--muted);line-height:1.8">
-        <div style="margin-bottom:8px">① <strong>JSONエクスポート</strong> → ファイルダウンロード</div>
-        <div style="margin-bottom:8px">② GitHubリポジトリの <code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">projects/</code> フォルダへ配置</div>
-        <div style="margin-bottom:8px">ファイル名：<code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">${(extractAndpadId(getVal('andpadId'))||'ANDPAD_ID')}-${(getVal('facilityName')||'案件名').replace(/\s/g,'-')}.json</code></div>
-        <div style="margin-bottom:8px">③ commitメッセージ例：<br><code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">feat: ${getVal('facilityName')||'案件名'} 情報収集シート更新</code></div>
-        <div style="color:#666">チームメンバーは同ファイルをインポートして閲覧・編集できます。</div>
+        <div style="margin-bottom:8px">① <strong>案件の読込</strong><br>ANDPADシステムID（8桁の数字）を入力し、<code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">📊 スプレッドシートから読込</code> をクリックすると、最新の案件情報が自動転記されます。</div>
+        <div style="margin-bottom:8px">② <strong>情報の入力・更新</strong><br>各カテゴリ（①〜⑥）のタブを切り替え、現場情報を入力・修正します。未記入の必須項目は下のチェック欄にリアルタイムで表示されます。</div>
+        <div style="margin-bottom:8px">③ <strong>スプレッドシートへの保存</strong><br>入力が終わったら、<code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">📊 スプレッドシートに送信</code> をクリックします。シート側に対応するIDの行があれば自動上書きされ、なければ新規追加されます。</div>
+        <div style="color:#666">※ 従来通りのローカル保存（JSONエクスポート）や印刷も各ボタンから可能です。</div>
       </div>
     </div>
     <div class="dash-card">
