@@ -400,7 +400,7 @@ const SEC = [
 // ============================================================
 // GAS ENDPOINTS
 // ============================================================
-const GAS_SEND_URL = 'https://script.google.com/macros/s/AKfycbw9GDpwp2voLD5l2fsRriRqwNOOH2FoDEgpJPiuU0INCj8mNiwGa8lI7IrW7QyT4k6E/exec';
+const GAS_SEND_URL = 'https://script.google.com/macros/s/AKfycbxtDgUYNHrTS4ng_2kVkKqFjnXqE2O1qctw85pq929hPzGBUpUOLn-epmBsoSQVpeUu/exec';
 const GAS_GET_URL  = 'https://script.google.com/macros/s/AKfycbxtDgUYNHrTS4ng_2kVkKqFjnXqE2O1qctw85pq929hPzGBUpUOLn-epmBsoSQVpeUu/exec';
 
 // ============================================================
@@ -896,38 +896,33 @@ function showToast(msg, ok){
 // GAS スプレッドシート送信 (POST)
 // ============================================================
 function buildSpreadsheetPayload() {
-  const headers = [];
-  const values = [];
+  const payload = {};
 
-  headers.push('送信日時', 'ANDPADシステムID', 'ANDPADのURL', '作成日', '記入者', '伝達事項', '進捗', '図面格納先URL');
-  values.push(
-    new Date().toLocaleString('ja-JP'),
-    extractAndpadId(getVal('andpadId')) || '',
-    getVal('andpadUrl') || '',
-    metaState.createdDate || '',
-    metaState.lastEditor || '',
-    metaState.memo || '',
-    metaState.progress || '記入中',
-    metaState.drawingUrl || ''
-  );
+  payload['送信日時'] = new Date().toLocaleString('ja-JP');
+  payload['ANDPADシステムID'] = extractAndpadId(getVal('andpadId')) || '';
+  payload['ANDPADのURL'] = getVal('andpadUrl') || '';
+  payload['作成日'] = metaState.createdDate || '';
+  payload['記入者'] = metaState.lastEditor || '';
+  payload['伝達事項'] = metaState.memo || '';
+  payload['進捗'] = metaState.progress || '記入中';
+  payload['図面格納先URL'] = metaState.drawingUrl || '';
 
   SEC.forEach(sec => {
     sec.subs.forEach(sub => {
       sub.fields.forEach(f => {
         if (f.key === 'andpadId' || f.key === 'andpadUrl') return;
         const label = 'No.' + (f.no === '*' ? '-' : f.no) + ' ' + f.lbl;
-        headers.push(label);
         if (f.type === 'multi') {
           const live = multiGetVals(f.key).filter(v => v !== '');
-          values.push(live.length ? live.join(', ') : (getVal(f.key) || ''));
+          payload[label] = live.length ? live.join(', ') : (getVal(f.key) || '');
         } else {
-          values.push(getVal(f.key) || '');
+          payload[label] = getVal(f.key) || '';
         }
       });
     });
   });
 
-  return { headers, values };
+  return payload;
 }
 
 function sendToGAS() {
