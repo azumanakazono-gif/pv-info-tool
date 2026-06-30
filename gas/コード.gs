@@ -77,8 +77,58 @@ function doPost(e) {
   }
 }
 
-function doGet() {
-  return ContentService.createTextOutput(
-    JSON.stringify({ status: 'ok', message: 'PV情報収集ツール GAS API' })
-  ).setMimeType(ContentService.MimeType.JSON);
+function doGet(e) {
+  var id = e && e.parameter ? e.parameter.id : '';
+
+  if (!id) {
+    return ContentService.createTextOutput(
+      JSON.stringify({ status: 'ok', message: 'PV情報収集ツール GAS API' })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName(SHEET_NAME);
+
+    if (!sheet || sheet.getLastRow() < 2) {
+      throw new Error('データが見つかりません');
+    }
+
+    var lastCol = sheet.getLastColumn();
+    var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    var andpadColIndex = headers.indexOf('ANDPADシステムID');
+
+    if (andpadColIndex < 0) {
+      throw new Error('ANDPADシステムID列が見つかりません');
+    }
+
+    var colValues = sheet.getRange(2, andpadColIndex + 1, sheet.getLastRow() - 1, 1).getValues();
+    var rowIndex = -1;
+    for (var r = 0; r < colValues.length; r++) {
+      if (String(colValues[r][0]) === String(id)) {
+        rowIndex = r + 2;
+        break;
+      }
+    }
+
+    if (rowIndex < 0) {
+      throw new Error('該当するANDPADシステムIDのデータが見つかりません');
+    }
+
+    var rowValues = sheet.getRange(rowIndex, 1, 1, lastCol).getValues()[0];
+    var data = {};
+    for (var c = 0; c < headers.length; c++) {
+      if (headers[c] === '') continue;
+      data[headers[c]] = rowValues[c];
+    }
+
+    return ContentService.createTextOutput(
+      JSON.stringify({ status: 'success', data: data })
+    ).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService.createTextOutput(
+      JSON.stringify({ status: 'error', message: err.message })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
 }
