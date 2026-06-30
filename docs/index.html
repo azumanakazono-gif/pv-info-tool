@@ -911,7 +911,7 @@ function buildSpreadsheetPayload() {
     sec.subs.forEach(sub => {
       sub.fields.forEach(f => {
         if (f.key === 'andpadId' || f.key === 'andpadUrl') return;
-        const label = 'No.' + (f.no === '*' ? '-' : f.no) + ' ' + f.lbl;
+        const label = f.lbl;
         if (f.type === 'multi') {
           const live = multiGetVals(f.key).filter(v => v !== '');
           payload[label] = live.length ? live.join(', ') : (getVal(f.key) || '');
