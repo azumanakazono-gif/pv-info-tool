@@ -27,7 +27,7 @@ body{font-family:"Hiragino Sans","Yu Gothic UI",system-ui,sans-serif;font-size:1
 .hdr-home{cursor:pointer;transition:opacity .2s,text-decoration .2s}
 .hdr-home:hover{opacity:1;text-decoration:underline;text-underline-offset:3px}
 .hdr-save{font-size:10px;opacity:.6;white-space:nowrap}
-.hdr-btns{display:flex;gap:6px;flex-shrink:0}
+.hdr-btns{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
 .btn{padding:5px 12px;border:none;border-radius:4px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:.15s}
 .btn-wh{background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.35)}.btn-wh:hover{background:rgba(255,255,255,.28)}
 .btn-green{background:var(--c1l);color:#fff}.btn-green:hover{background:#3a9a6a}
@@ -35,6 +35,7 @@ body{font-family:"Hiragino Sans","Yu Gothic UI",system-ui,sans-serif;font-size:1
 .btn-solid{background:var(--c1);color:#fff}.btn-solid:hover{background:#2d5f47}
 .btn-outline{background:#fff;color:var(--c1);border:1px solid var(--c1)}.btn-outline:hover{background:var(--c1p)}
 .btn-sheet{background:#0f9d58;color:#fff;border:1px solid #0a7c45}.btn-sheet:hover{background:#0a7c45}.btn-sheet:disabled{opacity:.5;cursor:not-allowed}
+.btn-import{background:#1565c0;color:#fff;border:1px solid #0d47a1}.btn-import:hover{background:#0d47a1}.btn-import:disabled{opacity:.5;cursor:not-allowed}
 
 /* ── TOAST ── */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:6px;font-size:12px;font-weight:700;color:#fff;z-index:2000;box-shadow:0 4px 16px rgba(0,0,0,.25);animation:toastIn .3s ease}
@@ -214,7 +215,7 @@ select{-webkit-appearance:auto}
 
 <script>
 // ============================================================
-// FIELD DEFINITIONS (スプレッドシート完全対応 No.1〜123)
+// FIELD DEFINITIONS (スプレッドシート完全対応 No.1〜125)
 // ============================================================
 const SEC = [
   {id:1,num:'①',title:'基本情報',color:'#1B4332',light:'#D1FAE5',subs:[
@@ -409,8 +410,88 @@ const SEC = [
   ]},
 ];
 
-// Meta fields (not numbered in the spec)
-const META_KEYS = ['andpadId','createdDate','lastEditor','finalChecker','estimateEditor','progress','ver'];
+// ============================================================
+// GAS ENDPOINTS
+// ============================================================
+const GAS_SEND_URL = 'https://script.google.com/macros/s/AKfycbxtDgUYNHrTS4ng_2kVkKqFjnXqE2O1qctw85pq929hPzGBUpUOLn-epmBsoSQVpeUu/exec';
+const GAS_GET_URL  = 'https://script.google.com/macros/s/AKfycbxtDgUYNHrTS4ng_2kVkKqFjnXqE2O1qctw85pq929hPzGBUpUOLn-epmBsoSQVpeUu/exec';
+
+// ============================================================
+// FIELD MAPPING (表記揺れ吸収用)
+// ============================================================
+const FIELD_LABEL_MAP = {};   // 正規ラベル → field object
+const FIELD_KEY_MAP   = {};   // key → field object
+const ALL_FIELDS      = [];
+
+(function buildMaps(){
+  SEC.forEach(s => s.subs.forEach(sub => sub.fields.forEach(f => {
+    ALL_FIELDS.push(f);
+    FIELD_KEY_MAP[f.key] = f;
+    const canonical = 'No.' + (f.no === '*' ? '-' : f.no) + ' ' + f.lbl;
+    FIELD_LABEL_MAP[canonical] = f;
+  })));
+})();
+
+function normalizeLabel(s){
+  return String(s)
+    .replace(/[\s　]+/g, '')
+    .replace(/[（(]/g, '(').replace(/[）)]/g, ')')
+    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+    .replace(/[①②③④⑤⑥⑦⑧⑨⑩]/g, c => String(c.charCodeAt(0) - 0x245F))
+    .toLowerCase();
+}
+
+function buildFuzzyMap(){
+  const map = {};
+  const metaAliases = {
+    'ANDPADシステムID': '_andpadId',
+    'ANDPADのURL': '_andpadUrl',
+    'ANDPAD案件名': '_facilityName',
+    '作成日': '_createdDate',
+    '記入者': '_lastEditor',
+    '進捗': '_progress',
+    '伝達事項': '_memo',
+    '図面格納先URL': '_drawingUrl',
+  };
+  Object.entries(metaAliases).forEach(([label, target]) => {
+    map[normalizeLabel(label)] = target;
+  });
+  ALL_FIELDS.forEach(f => {
+    map[normalizeLabel(f.lbl)] = f.key;
+    map[normalizeLabel(f.key)] = f.key;
+    const canonical = 'No.' + (f.no === '*' ? '-' : f.no) + ' ' + f.lbl;
+    map[normalizeLabel(canonical)] = f.key;
+    const noPrefix = 'No.' + f.no + ' ' + f.lbl;
+    map[normalizeLabel(noPrefix)] = f.key;
+  });
+  return map;
+}
+const FUZZY_MAP = buildFuzzyMap();
+
+function resolveKey(label){
+  const norm = normalizeLabel(label);
+  if (FUZZY_MAP[norm]) return FUZZY_MAP[norm];
+  const stripped = norm.replace(/^no\.\d+/, '').replace(/^no\.-/, '');
+  if (FUZZY_MAP[stripped]) return FUZZY_MAP[stripped];
+  for (const [k, v] of Object.entries(FUZZY_MAP)){
+    if (k.includes(stripped) || stripped.includes(k)) return v;
+  }
+  return null;
+}
+
+function normalizeDate(val){
+  if (!val) return '';
+  const s = String(val).trim();
+  const m1 = s.match(/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/);
+  if (m1) return m1[1] + '-' + m1[2].padStart(2,'0') + '-' + m1[3].padStart(2,'0');
+  const m2 = s.match(/^(\d{4})年(\d{1,2})月(\d{1,2})日/);
+  if (m2) return m2[1] + '-' + m2[2].padStart(2,'0') + '-' + m2[3].padStart(2,'0');
+  const d = new Date(s);
+  if (!isNaN(d.getTime())){
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  return s;
+}
 
 // ============================================================
 // STATE
@@ -452,7 +533,6 @@ function calcTotalProgress(){
   return {filled:f,total:t,pct:t?Math.round(f/t*100):0};
 }
 function updateProgress(){
-  // Update tab fill bars
   SEC.forEach(s=>{
     const p=calcSectionProgress(s.id);
     const bar=document.getElementById(`tfill-${s.id}`);
@@ -460,7 +540,6 @@ function updateProgress(){
     const tabPct=document.getElementById(`tpct-${s.id}`);
     if(tabPct) tabPct.textContent=p.pct+'%';
   });
-  // Update total in header and dashboard
   const tot=calcTotalProgress();
   const totEl=document.getElementById('total-pct-txt');
   if(totEl) totEl.textContent=tot.pct+'%';
@@ -470,19 +549,16 @@ function updateProgress(){
   if(gaugeNum) gaugeNum.textContent=tot.pct+'%';
   const gaugeBarFill=document.getElementById('gauge-barfill');
   if(gaugeBarFill) gaugeBarFill.style.width=tot.pct+'%';
-  // Update section badges on dashboard
   SEC.forEach(s=>{
     const p=calcSectionProgress(s.id);
     const dp=document.getElementById(`dpct-${s.id}`);
     const db=document.getElementById(`dbar-${s.id}`);
     const dc=document.getElementById(`dcount-${s.id}`);
-    if(dp){dp.textContent=p.pct+'%';dp.style.color=p.pct===100?'#16a34a':p.pct>50?s.color:s.color;}
+    if(dp){dp.textContent=p.pct+'%';dp.style.color=p.pct===100?'#16a34a':s.color;}
     if(db){db.style.width=p.pct+'%';db.style.background=s.color;}
     if(dc) dc.textContent=`${p.filled}/${p.total} 必須入力済`;
   });
-  // Update header facility name
   updateHeader();
-  // Update checklist
   renderChecklist();
 }
 function updateHeader(){
@@ -567,7 +643,6 @@ function dashboardHtml(){
   }).join('');
 
   return `<div class="panel${currentTab==='dashboard'?' on':''}" id="panel-dashboard">
-  <div class="notice"><span class="notice-icon">⚠️</span><div>⚠️ 重要：入力作業を行った場合は、必ず最新更新日と最終記入者を記入して「スプレッドシートに送信」ボタンを押してください。</div></div>
   <div class="dash-grid">
     <div class="dash-card dash-card-progress">
       <h3>📊 全体進捗</h3>
@@ -590,20 +665,20 @@ function dashboardHtml(){
       </div>
     </div>
     <div class="dash-card">
-      <h3>📁 GitHub保存ガイド</h3>
-      <div style="font-size:11px;color:var(--muted);line-height:1.8">
-        <div style="margin-bottom:8px">① <strong>JSONエクスポート</strong> → ファイルダウンロード</div>
-        <div style="margin-bottom:8px">② GitHubリポジトリの <code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">projects/</code> フォルダへ配置</div>
-        <div style="margin-bottom:8px">ファイル名：<code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">${(extractAndpadId(getVal('andpadId'))||'ANDPAD_ID')}-${(getVal('facilityName')||'案件名').replace(/\s/g,'-')}.json</code></div>
-        <div style="margin-bottom:8px">③ commitメッセージ例：<br><code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">feat: ${getVal('facilityName')||'案件名'} 情報収集シート更新</code></div>
-        <div style="margin-bottom:8px">④ 案件一覧を見るためのスプレッドシートを開きたい場合はメニューバー（上部）の【一覧を開く】をクリックしてください</div>
-        <div style="color:#666">チームメンバーは同ファイルをインポートして閲覧・編集できます。</div>
+      <h3>💡 使用説明</h3>
+      <div style="font-size:14px;color:var(--muted);line-height:2.1">
+        <div style="margin-bottom:10px">① <strong>案件の読込</strong><br>ANDPADシステムID（8桁の数字）を入力し、<code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">📊 スプレッドシートから読込</code> をクリックすると、最新の案件情報が自動転記されます。<br><small style="color:#888;font-size:12px">※ANDPADシステムIDが不明な場合は<br>(株)アズマ諸石(090-4929-4908)へお尋ねください。</small></div>
+        <div style="margin-bottom:10px">② <strong>情報の入力・更新</strong><br>各カテゴリ（①〜⑥）のタブを切り替え、現場情報を入力・修正します。未記入の必須項目は下のチェック欄にリアルタイムで表示されます。</div>
+        <div style="margin-bottom:10px">③ <strong>スプレッドシートへの保存</strong><br>入力が終わったら、<code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">📊 スプレッドシートに送信</code> をクリックします。シート側に対応するIDの行があれば自動上書きされ、なければ新規追加されます。</div>
+        <div style="margin-bottom:10px">④ <strong>案件一覧の確認</strong><br>案件一覧を見るためのスプレッドシートを開きたい場合はメニューバー（上部）の【一覧を開く】をクリックしてください</div>
+        <div style="margin:10px 0;padding:10px 12px;background:#fef2f2;border:1px solid #fca5a5;border-left:4px solid #dc2626;border-radius:4px;color:#b91c1c;font-weight:700;font-size:14px;line-height:1.8">⚠️ 重要：入力作業を行った場合は、必ず最新更新日と最終記入者を記入して「スプレッドシートに送信」ボタンを押してください。</div>
+        <div style="color:#666">※ 従来通りのローカル保存（JSONエクスポート）や印刷も各ボタンから可能です。</div>
       </div>
     </div>
     <div class="dash-card">
       <h3>⚡ 設計判断チェックポイント</h3>
       <div style="font-size:11px;line-height:2">
-        <div>①逆潮流の有無 → <strong style="color:${getVal('reverseFlow')?'#16a34a':getVal('reverseFlow')===''?'var(--req)':'var(--req)'}">RPR / PCS制御方式</strong></div>
+        <div>①逆潮流の有無 → <strong style="color:${getVal('reverseFlow')?'#16a34a':'var(--req)'}">RPR / PCS制御方式</strong></div>
         <div>②特定負荷有無 → <strong>自立運転回路 / 単三分離</strong></div>
         <div>③PCS相別 → <strong>受電方式 / 負荷構成との整合</strong></div>
         <div>④JIS C 8955 → <strong>積雪・風速・粗度・高さ・許容荷重</strong></div>
@@ -624,7 +699,6 @@ function checklistHtml(){
     {title:'⑤施工条件',keys:['accessRoad','largeVehicle','cranePlan','scaffolding','workHours','localContractor','accommodation','saltDamage','heavySnow']},
     {title:'⑥リスク・制約',keys:['structuralIssues','zoningUse','elecActNotice','scheduleConstraint','budget','approvalStatus']},
   ];
-  // Find labels
   const labelMap={};
   SEC.forEach(s=>s.subs.forEach(sub=>sub.fields.forEach(f=>{labelMap[f.key]=f.lbl;})));
   return checks.map(c=>{
@@ -669,17 +743,16 @@ function tabsHtml(){
 }
 
 function renderApp(){
-  const tot=calcTotalProgress();
   document.getElementById('app').innerHTML=`
     <div class="hdr">
       <span class="hdr-logo hdr-home" onclick="switchTab('dashboard')">☀ 太陽光PJ 情報収集ツール</span>
       <span class="hdr-facility hdr-home" id="header-facility" onclick="switchTab('dashboard')">${esc(getVal('facilityName')||'案件名未入力')}</span>
       <span class="hdr-save" id="save-ts">未保存</span>
       <div class="hdr-btns print-hide">
-        <button class="btn btn-wh" id="btn-load" onclick="loadFromGAS()">📂 読込</button>
-        <button class="btn btn-green" onclick="doExport()">💾 エクスポート</button>
+        <button class="btn btn-import" id="btn-import" onclick="importFromSpreadsheet()">📊 スプレッドシートから読込</button>
         <button class="btn btn-sheet" id="btn-sheet" onclick="sendToGAS()">📊 スプレッドシートに送信</button>
         <button class="btn btn-wh" onclick="window.open('https://docs.google.com/spreadsheets/d/1fgcG4ni07vrVjoCX8W7Y7in763C9ZulcasXH6fOI_9w/edit','_blank')">📂 一覧を開く</button>
+        <button class="btn btn-green" onclick="doExport()">💾 エクスポート</button>
         <button class="btn btn-wh" onclick="window.print()">🖨 印刷</button>
         <button class="btn btn-red" onclick="confirmClear()">🗑 クリア</button>
       </div>
@@ -758,15 +831,12 @@ function multiDel(key,idx){
   multiSync(key);
 }
 function switchTab(id){
-  // Normalize: section IDs are numbers; dashboard/checklist are strings
   const nid = (id!=='dashboard'&&id!=='checklist') ? Number(id) : id;
   currentTab=nid;
-  // Update tab classes
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   const tabEls=document.querySelectorAll('.tab');
   const tabs=[{id:'dashboard'},...SEC.map(s=>({id:s.id})),{id:'checklist'}];
   tabs.forEach((t,i)=>{if(t.id===nid&&tabEls[i]) tabEls[i].classList.add('on');});
-  // Update panel visibility
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   const panel=document.getElementById(`panel-${nid}`);
   if(panel) panel.classList.add('on');
@@ -791,54 +861,8 @@ function doExport(){
   a.href=url;a.download=`${andpad}-${facility}.json`;a.click();
   URL.revokeObjectURL(url);
 }
-function loadFromGAS(){
-  const btn=document.getElementById('btn-load');
-  const id=extractAndpadId(getVal('andpadId'));
-  if(!id){
-    showToast('ANDPADシステムIDを入力してから読込してください',false);
-    return;
-  }
-  if(btn){btn.disabled=true;btn.textContent='📂 読込中…';}
-  fetch(GAS_URL,{
-    method:'POST',
-    redirect:'follow',
-    headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify({action:'load',andpadId:id})
-  }).then(r=>{
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    return r.json();
-  }).then(res=>{
-    if(res.status!=='success') throw new Error(res.message||'データが見つかりません');
-    restoreFromSheet(res.data);
-    showToast('スプレッドシートからデータを復元しました',true);
-  }).catch(err=>{
-    showToast('読込失敗: '+err.message,false);
-  }).finally(()=>{
-    if(btn){btn.disabled=false;btn.textContent='📂 読込';}
-  });
-}
-function restoreFromSheet(data){
-  const metaLabelMap={
-    '作成日':'createdDate','記入者':'lastEditor','進捗':'progress',
-    '伝達事項':'memo','図面格納先URL':'drawingUrl'
-  };
-  const fieldLabelMap={};
-  SEC.forEach(s=>s.subs.forEach(sub=>sub.fields.forEach(f=>{
-    const label='No.'+(f.no==='*'?'-':f.no)+' '+f.lbl;
-    fieldLabelMap[label]=f;
-  })));
-  Object.keys(data).forEach(label=>{
-    const val=data[label]!=null?String(data[label]):'';
-    if(label==='ANDPADシステムID'){state['andpadId']=val;return;}
-    if(label==='ANDPADのURL'){state['andpadUrl']=val;return;}
-    if(metaLabelMap[label]){metaState[metaLabelMap[label]]=val;return;}
-    const f=fieldLabelMap[label];
-    if(f) state[f.key]=val;
-  });
-  saveState();
-  renderApp();
-  updateProgress();
-}
+
+
 function closeModal(){document.getElementById('modal-root').innerHTML='';}
 function confirmClear(){
   document.getElementById('modal-root').innerHTML=`
@@ -854,7 +878,7 @@ function confirmClear(){
     </div>`;
 }
 function doClear(){
-  state={};metaState={createdDate:'',lastEditor:'',progress:'記入中',memo:''};
+  state={};metaState={createdDate:'',lastEditor:'',progress:'記入中',memo:'',drawingUrl:''};
   saveState();closeModal();renderApp();updateProgress();
 }
 
@@ -872,11 +896,6 @@ function extractAndpadId(val){
   return val.replace(/\s/g,'');
 }
 
-// ============================================================
-// EXPORT TO GOOGLE SPREADSHEET (via GAS)
-// ============================================================
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbw9GDpwp2voLD5l2fsRriRqwNOOH2FoDEgpJPiuU0INCj8mNiwGa8lI7IrW7QyT4k6E/exec';
-
 function showToast(msg, ok){
   const el = document.createElement('div');
   el.className = 'toast ' + (ok ? 'toast-ok' : 'toast-ng');
@@ -885,67 +904,148 @@ function showToast(msg, ok){
   setTimeout(() => el.remove(), 3500);
 }
 
-
 // ============================================================
-// GAS スプレッドシート送信
+// GAS スプレッドシート送信 (POST)
 // ============================================================
 function buildSpreadsheetPayload() {
-  const headers = [];
-  const values = [];
+  const payload = {};
 
-  headers.push('送信日時', 'ANDPADシステムID', 'ANDPADのURL', '作成日', '記入者', '伝達事項', '進捗', '図面格納先URL');
-  values.push(
-    new Date().toLocaleString('ja-JP'),
-    extractAndpadId(getVal('andpadId')) || '',
-    getVal('andpadUrl') || '',
-    metaState.createdDate || '',
-    metaState.lastEditor || '',
-    metaState.memo || '',
-    metaState.progress || '記入中',
-    metaState.drawingUrl || ''
-  );
+  payload['送信日時'] = new Date().toLocaleString('ja-JP');
+  payload['ANDPADシステムID'] = extractAndpadId(getVal('andpadId')) || '';
+  payload['ANDPADのURL'] = getVal('andpadUrl') || '';
+  payload['作成日'] = metaState.createdDate || '';
+  payload['記入者'] = metaState.lastEditor || '';
+  payload['伝達事項'] = metaState.memo || '';
+  payload['進捗'] = metaState.progress || '記入中';
+  payload['図面格納先URL'] = metaState.drawingUrl || '';
 
   SEC.forEach(sec => {
     sec.subs.forEach(sub => {
       sub.fields.forEach(f => {
         if (f.key === 'andpadId' || f.key === 'andpadUrl') return;
-        const label = 'No.' + (f.no === '*' ? '-' : f.no) + ' ' + f.lbl;
-        headers.push(label);
+        const label = f.lbl.replace(/★/g, '').trim();
         if (f.type === 'multi') {
           const live = multiGetVals(f.key).filter(v => v !== '');
-          values.push(live.length ? live.join(', ') : (getVal(f.key) || ''));
+          payload[label] = live.length ? live.join(', ') : (getVal(f.key) || '');
         } else {
-          values.push(getVal(f.key) || '');
+          payload[label] = getVal(f.key) || '';
         }
       });
     });
   });
 
-  return { headers, values };
+  return payload;
 }
 
-function sendToGAS(){
+function sendToGAS() {
   const btn = document.getElementById('btn-sheet');
   if (!btn || btn.disabled) return;
   btn.disabled = true;
   btn.textContent = '📊 送信中…';
+
   const payload = buildSpreadsheetPayload();
-  fetch(GAS_URL, {
+  fetch(GAS_SEND_URL, {
     method: 'POST',
     redirect: 'follow',
-    headers: {'Content-Type': 'text/plain'},
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(payload)
-  }).then(r=>{
-    if(!r.ok) throw new Error('HTTP '+r.status);
+  })
+  .then(r => {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.text();
-  }).then(()=>{
+  })
+  .then(() => {
     showToast('スプレッドシートへの送信が完了しました', true);
-  }).catch(err=>{
+  })
+  .catch(err => {
     showToast('送信に失敗しました: ' + err.message, false);
-  }).finally(()=>{
+  })
+  .finally(() => {
     btn.disabled = false;
     btn.textContent = '📊 スプレッドシートに送信';
   });
+}
+
+// ============================================================
+// GAS スプレッドシートから読込 (GET)
+// ============================================================
+function importFromSpreadsheet(){
+  const btn = document.getElementById('btn-import');
+  const id = extractAndpadId(getVal('andpadId'));
+  if (!id) {
+    showToast('ANDPADシステムIDを入力してから読込してください', false);
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = '📊 読込中…'; }
+
+  const url = GAS_GET_URL + '?id=' + encodeURIComponent(id);
+  fetch(url, { redirect: 'follow' })
+    .then(r => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(res => {
+      if (res.status !== 'success') throw new Error(res.message || 'データが見つかりません');
+      applySpreadsheetData(res.data);
+      showToast('スプレッドシートからデータを読み込みました（' + Object.keys(res.data).length + '項目）', true);
+    })
+    .catch(err => {
+      showToast('読込失敗: ' + err.message, false);
+    })
+    .finally(() => {
+      if (btn) { btn.disabled = false; btn.textContent = '📊 スプレッドシートから読込'; }
+    });
+}
+
+function applySpreadsheetData(data){
+  let mapped = 0, skipped = [];
+
+  Object.entries(data).forEach(([label, rawVal]) => {
+    if (rawVal == null || String(rawVal).trim() === '') return;
+    const val = String(rawVal).trim();
+    const resolved = resolveKey(label);
+
+    if (!resolved) {
+      skipped.push(label);
+      return;
+    }
+
+    if (resolved.startsWith('_')) {
+      const metaKey = resolved.slice(1);
+      if (metaKey === 'andpadId') {
+        state.andpadId = val;
+      } else if (metaKey === 'andpadUrl') {
+        state.andpadUrl = val;
+      } else if (metaKey === 'facilityName') {
+        state.facilityName = val;
+      } else if (metaKey === 'createdDate') {
+        metaState.createdDate = normalizeDate(val);
+      } else {
+        metaState[metaKey] = val;
+      }
+      mapped++;
+      return;
+    }
+
+    const field = FIELD_KEY_MAP[resolved];
+    if (field && field.type === 's' && field.opts) {
+      const normVal = normalizeLabel(val);
+      const match = field.opts.find(o => normalizeLabel(o) === normVal)
+                 || field.opts.find(o => normalizeLabel(o).includes(normVal) || normVal.includes(normalizeLabel(o)));
+      state[resolved] = match || val;
+    } else {
+      state[resolved] = val;
+    }
+    mapped++;
+  });
+
+  if (skipped.length > 0) {
+    console.log('スプレッドシート読込: マッピング不能項目:', skipped);
+  }
+
+  saveState();
+  renderApp();
+  updateProgress();
 }
 
 // ============================================================
@@ -985,7 +1085,6 @@ function sendToGAS(){
 loadState();
 renderApp();
 updateProgress();
-// After render, update progress bars
 setTimeout(()=>updateProgress(),50);
 </script>
 </body>
