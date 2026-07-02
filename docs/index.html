@@ -109,6 +109,12 @@ select{-webkit-appearance:auto}
 .meta-item input,.meta-item select{font-size:12px}
 .meta-item-hl{border:2px solid var(--req);border-radius:5px;padding:6px;background:#fff5f5}
 .meta-item-hl label{font-size:12px;font-weight:900;color:var(--req)}
+
+@keyframes pulse-blink{
+  0%,100%{border-color:var(--req);box-shadow:none}
+  50%{border-color:#f59e0b;box-shadow:0 0 8px 2px rgba(245,158,11,.5)}
+}
+.blink-active{animation:pulse-blink 1.6s ease-in-out infinite}
 .andpad-id-label{font-size:14px!important;font-weight:900!important;color:var(--req)!important}
 
 .dash-project-name{font-size:17px;font-weight:900;color:var(--c1);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
@@ -498,6 +504,7 @@ function normalizeDate(val){
 // ============================================================
 let state = {};
 let metaState = {createdDate:'',lastEditor:'',progress:'記入中',memo:'',drawingUrl:''};
+let metaBlink = true;
 let currentTab = 'dashboard';
 const STORE_KEY = 'pv_info_sheet_v1';
 const META_KEY  = 'pv_info_meta_v1';
@@ -658,8 +665,8 @@ function dashboardHtml(){
       <div class="dash-project-name">ANDPAD案件名：<span class="val" id="dash-project-name-val">${esc(getVal('facilityName')||'未入力')}</span></div>
       <div class="meta-grid">
         <div class="meta-item" style="grid-column:1/-1"><label class="andpad-id-label">ANDPADシステムID（入力必須）</label><input type="text" id="dash-andpadId" value="${esc(getVal('andpadId'))}" placeholder="ANDPADのシステムID（数値）" oninput="syncAndpadId(this.value)"></div>
-        <div class="meta-item meta-item-hl"><label>最新更新日</label><input type="date" value="${metaState.createdDate||''}" oninput="handleMeta('createdDate',this.value)"></div>
-        <div class="meta-item meta-item-hl"><label>最終記入者</label><input type="text" value="${esc(metaState.lastEditor||'')}" placeholder="担当者名" oninput="handleMeta('lastEditor',this.value)"></div>
+        <div class="meta-item meta-item-hl${metaBlink?' blink-active':''}" id="meta-createdDate"><label>最新更新日</label><input type="date" value="${metaState.createdDate||''}" oninput="handleMeta('createdDate',this.value)"></div>
+        <div class="meta-item meta-item-hl${metaBlink?' blink-active':''}" id="meta-lastEditor"><label>最終記入者</label><input type="text" value="${esc(metaState.lastEditor||'')}" placeholder="担当者名" oninput="handleMeta('lastEditor',this.value)"></div>
         <div class="meta-item" style="grid-column:1/-1"><label>伝達事項</label><textarea rows="4" placeholder="ここに双方の伝達事項を記入" oninput="handleMeta('memo',this.value)">${esc(metaState.memo||'')}</textarea></div>
         <div class="meta-item drawing-url-wrap" style="grid-column:1/-1"><label class="lbl-drawing">📁 図面格納先URL</label><div style="display:flex;gap:6px;align-items:center;width:100%;box-sizing:border-box"><input class="drawing-url-input" type="url" id="drawingUrl-input" value="${esc(metaState.drawingUrl||'')}" placeholder="https://drive.google.com/..." oninput="handleMeta('drawingUrl',this.value);updateDrawingLink()"><button class="btn-link btn-link-drawing${metaState.drawingUrl?'':' disabled'}" id="drawing-link" type="button" onclick="var u=metaState.drawingUrl||'';if(u){window.open(u,'_blank');}">🔗 リンクを開く</button></div></div>
       </div>
@@ -789,6 +796,14 @@ function handleMeta(key,val){
   metaState[key]=val;
   saveState();
   if(key==='facilityName') updateHeader();
+  if(key==='createdDate'||key==='lastEditor') setMetaBlink(true);
+}
+function setMetaBlink(active){
+  metaBlink=active;
+  ['meta-createdDate','meta-lastEditor'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.toggle('blink-active',active);
+  });
 }
 function syncAndpadId(val){
   state.andpadId=val;
@@ -956,6 +971,7 @@ function sendToGAS() {
   })
   .then(() => {
     showToast('スプレッドシートへの送信が完了しました', true);
+    setMetaBlink(false);
   })
   .catch(err => {
     showToast('送信に失敗しました: ' + err.message, false);
