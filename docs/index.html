@@ -106,12 +106,25 @@ select{-webkit-appearance:auto}
 .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .meta-item label{font-size:10px;font-weight:700;color:var(--muted);display:block;margin-bottom:3px}
 .meta-item input,.meta-item select{font-size:12px}
+.meta-item-hl{border:2px solid var(--req);border-radius:5px;padding:6px;background:#fff5f5}
+.meta-item-hl label{font-size:12px;font-weight:900;color:var(--req)}
+.andpad-id-label{font-size:14px!important;font-weight:900!important;color:var(--req)!important}
+
+.dash-project-name{font-size:17px;font-weight:900;color:var(--c1);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.dash-project-name .val{color:var(--text)}
 
 .total-gauge{text-align:center;padding:16px 0}
 .gauge-num{font-size:40px;font-weight:900;color:var(--c1);line-height:1}
 .gauge-lbl{font-size:11px;color:var(--muted);margin-top:4px}
 .gauge-bar{width:100%;height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:12px}
 .gauge-barfill{height:100%;background:var(--c1l);border-radius:4px;transition:width .5s}
+
+/* 📊 全体進捗 card: enlarged text for readability */
+.dash-card-progress h3{font-size:14px}
+.dash-card-progress .gauge-lbl{font-size:14px}
+.dash-card-progress .dash-rname{font-size:15px}
+.dash-card-progress .dash-pct{font-size:14px;width:44px}
+.dash-card-progress .dash-badge{width:30px;height:30px;font-size:13px}
 
 /* ── CHECKLIST ── */
 .chk-section{margin-bottom:16px}
@@ -475,6 +488,8 @@ function updateProgress(){
 function updateHeader(){
   const f=document.getElementById('header-facility');
   if(f) f.textContent=getVal('facilityName')||'案件名未入力';
+  const p=document.getElementById('dash-project-name-val');
+  if(p) p.textContent=getVal('facilityName')||'未入力';
 }
 
 // ============================================================
@@ -552,8 +567,9 @@ function dashboardHtml(){
   }).join('');
 
   return `<div class="panel${currentTab==='dashboard'?' on':''}" id="panel-dashboard">
+  <div class="notice"><span class="notice-icon">⚠️</span><div>⚠️ 重要：入力作業を行った場合は、必ず最新更新日と最終記入者を記入して「スプレッドシートに送信」ボタンを押してください。</div></div>
   <div class="dash-grid">
-    <div class="dash-card">
+    <div class="dash-card dash-card-progress">
       <h3>📊 全体進捗</h3>
       <div class="total-gauge">
         <div class="gauge-num" id="gauge-num">${tot.pct}%</div>
@@ -564,15 +580,11 @@ function dashboardHtml(){
     </div>
     <div class="dash-card">
       <h3>📋 案件メタ情報</h3>
+      <div class="dash-project-name">ANDPAD案件名：<span class="val" id="dash-project-name-val">${esc(getVal('facilityName')||'未入力')}</span></div>
       <div class="meta-grid">
-        <div class="meta-item" style="grid-column:1/-1"><label>ANDPADシステムID</label><input type="text" id="dash-andpadId" value="${esc(getVal('andpadId'))}" placeholder="ANDPADのシステムID（数値）" oninput="syncAndpadId(this.value)"></div>
-        <div class="meta-item"><label>作成日</label><input type="date" value="${metaState.createdDate||''}" oninput="handleMeta('createdDate',this.value)"></div>
-        <div class="meta-item"><label>記入者</label><input type="text" value="${esc(metaState.lastEditor||'')}" placeholder="担当者名" oninput="handleMeta('lastEditor',this.value)"></div>
-        <div class="meta-item"><label>進捗</label>
-          <select oninput="handleMeta('progress',this.value)">
-            ${['記入中','確認待ち','確認済み','見積中','完了'].map(o=>`<option${metaState.progress===o?' selected':''}>${o}</option>`).join('')}
-          </select>
-        </div>
+        <div class="meta-item" style="grid-column:1/-1"><label class="andpad-id-label">ANDPADシステムID（入力必須）</label><input type="text" id="dash-andpadId" value="${esc(getVal('andpadId'))}" placeholder="ANDPADのシステムID（数値）" oninput="syncAndpadId(this.value)"></div>
+        <div class="meta-item meta-item-hl"><label>最新更新日</label><input type="date" value="${metaState.createdDate||''}" oninput="handleMeta('createdDate',this.value)"></div>
+        <div class="meta-item meta-item-hl"><label>最終記入者</label><input type="text" value="${esc(metaState.lastEditor||'')}" placeholder="担当者名" oninput="handleMeta('lastEditor',this.value)"></div>
         <div class="meta-item" style="grid-column:1/-1"><label>伝達事項</label><textarea rows="4" placeholder="ここに双方の伝達事項を記入" oninput="handleMeta('memo',this.value)">${esc(metaState.memo||'')}</textarea></div>
         <div class="meta-item drawing-url-wrap" style="grid-column:1/-1"><label class="lbl-drawing">📁 図面格納先URL</label><div style="display:flex;gap:6px;align-items:center;width:100%;box-sizing:border-box"><input class="drawing-url-input" type="url" id="drawingUrl-input" value="${esc(metaState.drawingUrl||'')}" placeholder="https://drive.google.com/..." oninput="handleMeta('drawingUrl',this.value);updateDrawingLink()"><button class="btn-link btn-link-drawing${metaState.drawingUrl?'':' disabled'}" id="drawing-link" type="button" onclick="var u=metaState.drawingUrl||'';if(u){window.open(u,'_blank');}">🔗 リンクを開く</button></div></div>
       </div>
@@ -584,6 +596,7 @@ function dashboardHtml(){
         <div style="margin-bottom:8px">② GitHubリポジトリの <code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">projects/</code> フォルダへ配置</div>
         <div style="margin-bottom:8px">ファイル名：<code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">${(extractAndpadId(getVal('andpadId'))||'ANDPAD_ID')}-${(getVal('facilityName')||'案件名').replace(/\s/g,'-')}.json</code></div>
         <div style="margin-bottom:8px">③ commitメッセージ例：<br><code style="background:#f3f4f6;padding:1px 4px;border-radius:3px">feat: ${getVal('facilityName')||'案件名'} 情報収集シート更新</code></div>
+        <div style="margin-bottom:8px">④ 案件一覧を見るためのスプレッドシートを開きたい場合はメニューバー（上部）の【一覧を開く】をクリックしてください</div>
         <div style="color:#666">チームメンバーは同ファイルをインポートして閲覧・編集できます。</div>
       </div>
     </div>
